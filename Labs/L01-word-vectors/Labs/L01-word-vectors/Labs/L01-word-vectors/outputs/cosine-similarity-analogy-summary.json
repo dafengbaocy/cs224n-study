@@ -1,0 +1,32 @@
+{
+  "capsule": "cosine-similarity-analogy",
+  "timestamp": "2026-06-10T09:40:50Z",
+  "key_results": {
+    "cos_king_queen": 0.3725,
+    "cos_king_man": 0.6459,
+    "cos_king_boy": 0.0703,
+    "cos_king_teacher": 0.2684,
+    "analogy_king_man_woman_top1": [
+      "queen",
+      1.0
+    ],
+    "analogy_boy_girl_man_top1": [
+      "woman",
+      1.0000000000000002
+    ]
+  },
+  "heatmap_shape": [
+    8,
+    8
+  ],
+  "heatmap_words": [
+    "king",
+    "queen",
+    "man",
+    "woman",
+    "prince",
+    "princess",
+    "boy",
+    "girl"
+  ]
+}

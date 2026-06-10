@@ -1,0 +1,87 @@
+{
+  "lecture": "L01-word-vectors",
+  "producer_stage": "paper-tutor",
+  "producer": "L01-R01",
+  "items": [
+    {
+      "asset_id": "L01-R01-p05-figure1-cbow-skipgram-arch",
+      "local_path": "Assets/L01-word-vectors/papers/L01-R01-p05-figure1-cbow-skipgram-arch.png",
+      "remote_url": "https://ar5iv.labs.arxiv.org/html/1301.3781/assets/x1.png",
+      "source_provenance": "L01-R01 PDF page 5 Figure 1, via ar5iv arXiv HTML rendering",
+      "used_for": ["WP03 CBOW and Skip-gram architecture comparison", "WP03 center/context prediction direction"],
+      "alt": "L01-R01 Figure 1: CBOW predicts current word from context; Skip-gram predicts surrounding words from current word",
+      "upload_status": "uploaded",
+      "upload_attempt_count": 0,
+      "upload_attempts": [],
+      "note": "Used official ar5iv URL directly; no screenshot or upload needed"
+    },
+    {
+      "asset_id": "L01-R01-p06-table1-semantic-syntactic-questions",
+      "local_path": "Assets/L01-word-vectors/papers/L01-R01-p06-table1-semantic-syntactic-questions.png",
+      "remote_url": "https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/09/20260609-005638.png",
+      "source_provenance": "L01-R01 PDF page 6 Table 1",
+      "used_for": ["WP03 word vector evaluation methodology", "WP04 semantic-syntactic relationship test design"],
+      "alt": "L01-R01 Table 1: Examples of five types of semantic and nine types of syntactic questions",
+      "upload_status": "uploaded",
+      "upload_attempt_count": 1,
+      "upload_attempts": [
+        {
+          "attempt_no": 1,
+          "method": "picgo_media_mcp",
+          "command_or_tool": "mcp_picgo_media_upload_image",
+          "timestamp": "2026-06-09T00:56:38+08:00",
+          "result": "uploaded",
+          "error": ""
+        }
+      ]
+    },
+    {
+      "asset_id": "L01-R01-p07-table3-architecture-comparison",
+      "local_path": "Assets/L01-word-vectors/papers/L01-R01-p07-table3-architecture-comparison.png",
+      "remote_url": "https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/09/20260609-005641.png",
+      "source_provenance": "L01-R01 PDF page 7 Table 3",
+      "used_for": ["WP03 Skip-gram vs CBOW performance comparison", "WP04 architecture efficiency analysis"],
+      "alt": "L01-R01 Table 3: Comparison of RNNLM, NNLM, CBOW, Skip-gram architectures on Semantic-Syntactic test",
+      "upload_status": "uploaded",
+      "upload_attempt_count": 1,
+      "upload_attempts": [
+        {
+          "attempt_no": 1,
+          "method": "picgo_media_mcp",
+          "command_or_tool": "mcp_picgo_media_upload_image",
+          "timestamp": "2026-06-09T00:56:41+08:00",
+          "result": "uploaded",
+          "error": ""
+        }
+      ]
+    },
+    {
+      "asset_id": "L01-R01-p10-table8-learned-relationships",
+      "local_path": "Assets/L01-word-vectors/papers/L01-R01-p10-table8-learned-relationships.png",
+      "remote_url": "https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/09/20260609-005658.png",
+      "source_provenance": "L01-R01 PDF page 10 Table 8",
+      "used_for": ["WP03 vector arithmetic relationship examples", "WP03 Skip-gram learned relationship quality"],
+      "alt": "L01-R01 Table 8: Examples of word pair relationships using Skip-gram vectors (300d, 783M words)",
+      "upload_status": "uploaded",
+      "upload_attempt_count": 2,
+      "upload_attempts": [
+        {
+          "attempt_no": 1,
+          "method": "picgo_media_mcp",
+          "command_or_tool": "mcp_picgo_media_upload_image",
+          "timestamp": "2026-06-09T00:56:43+08:00",
+          "result": "failed",
+          "error": "upload succeeded but returned too few urls: 0/1"
+        },
+        {
+          "attempt_no": 2,
+          "method": "picgo_media_cli",
+          "command_or_tool": "picgo_media_mcp.py upload",
+          "timestamp": "2026-06-09T00:56:58+08:00",
+          "result": "uploaded",
+          "error": ""
+        }
+      ]
+    }
+  ]
+}

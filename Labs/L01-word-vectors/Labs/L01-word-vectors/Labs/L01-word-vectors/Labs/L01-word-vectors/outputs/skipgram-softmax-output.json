@@ -1,0 +1,77 @@
+{
+  "capsule": "skipgram-softmax",
+  "waypoint": "WP03",
+  "vocabulary": [
+    "banking",
+    "money",
+    "river",
+    "bank",
+    "crisis",
+    "water"
+  ],
+  "vocab_size": 6,
+  "embedding_dim": 4,
+  "center_word": "banking",
+  "dot_products": {
+    "banking": 0.98,
+    "money": 0.96,
+    "river": -0.05,
+    "bank": 0.69,
+    "crisis": 0.18,
+    "water": -0.03
+  },
+  "exp_scores": {
+    "banking": 2.664456,
+    "money": 2.611696,
+    "river": 0.951229,
+    "bank": 1.993716,
+    "crisis": 1.197217,
+    "water": 0.970446
+  },
+  "partition_function_Z": 10.388761,
+  "probabilities": {
+    "banking": 0.256475,
+    "money": 0.251396,
+    "river": 0.091563,
+    "bank": 0.191911,
+    "crisis": 0.115242,
+    "water": 0.093413
+  },
+  "probability_sum": 1.0,
+  "comparison": {
+    "banking": {
+      "banking": 0.256475,
+      "money": 0.251396,
+      "river": 0.091563,
+      "bank": 0.191911,
+      "crisis": 0.115242,
+      "water": 0.093413
+    },
+    "river": {
+      "banking": 0.075178,
+      "money": 0.080629,
+      "river": 0.311019,
+      "bank": 0.157568,
+      "crisis": 0.085614,
+      "water": 0.289992
+    },
+    "crisis": {
+      "banking": 0.156599,
+      "money": 0.167954,
+      "river": 0.141697,
+      "bank": 0.146012,
+      "crisis": 0.25562,
+      "water": 0.132117
+    }
+  },
+  "key_insight": {
+    "P_money_given_banking": 0.251396,
+    "P_river_given_banking": 0.091563,
+    "ratio": 2.75
+  },
+  "plots": {
+    "prob_distribution": "outputs/skipgram-softmax-prob-distribution.png",
+    "three_steps": "outputs/skipgram-softmax-three-steps.png",
+    "computation_cost": "outputs/skipgram-softmax-computation-cost.png"
+  }
+}

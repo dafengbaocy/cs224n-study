@@ -98,8 +98,6 @@ stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
 notes: Clean run, no errors. Toy 4D vectors designed with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 3 plots generated successfully.
-<<<<<<< HEAD
-=======
 
 ## run_id 20260610T080907Z__t_832bffea__skipgram-softmax
 
@@ -166,7 +164,6 @@ notes: |
   SVD k=2 explained variance: 75.3%.
   Within-cluster cosine mean: 0.9932, cross-cluster: 0.1508.
   No cells skipped. No cache used.
->>>>>>> 4f19d35 (Add one-hot-vs-dense capsule (WP02))
 
 ## run_id 20260610T094508Z__t_87d53a54__negative-sampling-loss
 
@@ -181,3 +178,80 @@ stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-and-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-summary.json
 notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
 notes: Script ran without errors. Full softmax loss=2.7730, SGNS loss=4.0589 (k=5). Gradient direction plot saved. Toy data with seed=42 for reproducibility.
+
+## run_id 20260610T094926Z__t_9a2158c5__skipgram-softmax
+
+task_id: t_9a2158c5
+capsule_slug: skipgram-softmax
+timestamp: 2026-06-10T09:49:26Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty - no warnings after CJK fix)
+outputs:
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-probability-bar.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-dotscore-vs-prob.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-random-vs-trained.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
+notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/skipgram-softmax.ipynb
+note: Script ran without errors. Two parts: (A) random init shows uniform probs ~0.125, (B) hand-designed trained vectors show semantic clustering. 3 plots generated with English labels (CJK font unavailable in headless env). All images uploaded to obsidian-image host.
+
+## run_id 20260610T094936Z__t_9a2158c5__skipgram-softmax
+
+task_id: t_9a2158c5
+capsule_slug: skipgram-softmax
+timestamp: 2026-06-10T09:49:36Z
+hostname: hermes-agent
+command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty - no errors)
+outputs:
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-probability-bar.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-dotscore-vs-prob.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-random-vs-trained.png
+  - Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
+notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/skipgram-softmax.ipynb
+note: Script ran without errors. Two parts: (A) random init shows uniform probs ~0.125, (B) hand-designed trained vectors show semantic clustering. 3 plots generated with English labels (CJK font unavailable in headless env). All images uploaded to obsidian-image host. Notebook has 14 cells with full Chinese teaching content.
+
+## run_id 20260610T094123Z__t_2397e6e3__one-hot-vs-dense
+
+task_id: t_2397e6e3
+capsule_slug: one-hot-vs-dense
+timestamp: 2026-06-10T09:41:23Z
+hostname: 0d61b5cf12fa
+environment: Hermes container (.venv/bin/python, matplotlib+numpy available)
+command: .venv/bin/python Labs/L01-word-vectors/one-hot-vs-dense.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt (empty — no errors)
+outputs:
+  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
+  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.json
+  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-heatmap.png
+  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-bar-comparison.png
+notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/Labs/L01-word-vectors/one-hot-vs-dense.ipynb
+notes: Script ran cleanly with exit code 0. matplotlib charts generated without font warnings (CJK chars moved to English labels in chart; Chinese explanation in notebook/markdown). Toy dense vectors designed with 4 semantic dimensions (lodging/finance/food/entity) producing clear same-group (avg cos_sim=0.9979) vs cross-group (avg cos_sim=0.0899) separation. Gap = 0.9079.
+
+## run_id 20260610T094147Z__t_4443cc6a__co-occurrence-matrix
+
+task_id: t_4443cc6a
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T09:41:47Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty, no warnings)
+outputs:
+  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt
+  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d.png
+  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d-window2.png
+  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-summary.json
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+notes: Clean run, exit 0, no stderr. Corpus 6 sentences V=22. Two plots generated (window=1, window=2). Both uploaded to image host. Pushed to GitHub for Colab.

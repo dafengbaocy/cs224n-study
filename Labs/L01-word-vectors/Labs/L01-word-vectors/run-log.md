@@ -164,3 +164,21 @@ notes: |
   SVD k=2 explained variance: 75.3%.
   Within-cluster cosine mean: 0.9932, cross-cluster: 0.1508.
   No cells skipped. No cache used.
+<<<<<<< HEAD
+>>>>>>> 4f19d35 (Add one-hot-vs-dense capsule (WP02))
+
+## run_id 20260610T094508Z__t_87d53a54__negative-sampling-loss
+
+task_id: t_87d53a54
+capsule_slug: negative-sampling-loss
+timestamp: 2026-06-10T09:45:08Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/negative-sampling-loss.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-and-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-summary.json
+notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
+notes: Script ran without errors. Full softmax loss=2.7730, SGNS loss=4.0589 (k=5). Gradient direction plot saved. Toy data with seed=42 for reproducibility.
+=======
+>>>>>>> e21a131 (Add skipgram-softmax capsule (WP03))

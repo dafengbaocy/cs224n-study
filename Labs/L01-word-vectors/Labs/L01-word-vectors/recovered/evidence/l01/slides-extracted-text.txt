@@ -1,0 +1,590 @@
+=== PAGE 1 ===
+Natural Language Processing
+with Deep Learning
+CS224N/Ling284
+Diyi Yang / Tatsunori Hashimoto
+Lecture 1: Introduction and Word Vectors
+
+=== PAGE 2 ===
+Lecture Plan
+Lecture 1: Introduction and Word Vectors
+1. The course (10 mins)
+2. Human language and word meaning (15 mins)
+3. Word2vec introduction (15 mins)
+4. Word2vec objective function gradients (25 mins)
+5. Optimization basics (5 mins)
+Key learning today: The (astounding!) result that word meaning can be represented rather 
+well by a (high-dimensional) vector of real numbers
+2
+
+=== PAGE 3 ===
+Course logistics in brief
+3
+• Instructor: Diyi Yang, Tatsunori Hashimoto
+• Head TA: Jing Huang
+• Course Manager: John Cho
+• TAs: Many wonderful people! See website
+• Time: Tu/Th 4:30–5:50 Pacific time, Nvidia Aud. (→ video)
+• Email list: cs224n-win2425-staff@lists.stanford.edu
+• We’ve put a lot of other important information on the class webpage. Please read it!
+• http://cs224n.stanford.edu/ a.k.a., http://www.stanford.edu/class/cs224n/
+• TAs, syllabus, help sessions/office hours, Ed (for all course questions/discussion)
+• Office hours start Wednesday!
+• Python/numpy and then PyTorch tutorials: First two Fridays.
+• Slide PDFs uploaded before each lecture
+     
+
+=== PAGE 4 ===
+4
+
+=== PAGE 5 ===
+What do we hope to teach?  (A.k.a. “learning goals”)
+5
+1. The foundations of the effective modern methods for deep learning applied to NLP
+• Basics first: word vectors, feed-forward networks, recurrent networks, attention
+• Then key methods used in NLP in 2024: encoder-decoder models, transformers, 
+pretraining, post-training (RLHF), efficient adaptation, interpretability, language 
+model agents, etc.
+2. A big picture understanding of human languages and the difficulties in understanding 
+and producing them via computers
+3. An understanding of and ability to build systems (in PyTorch) for some of the major 
+problems in NLP:
+• Word meaning, dependency parsing, machine translation, question answering
+
+=== PAGE 6 ===
+Course work and grading policy
+• 4 x 1.5-week Assignments: 6% + 3 x 14%: 48% 
+• HW1 is released today! Due next Tuesday! At 4:30 p.m.
+• Submitted to Gradescope in Canvas (i.e., using @stanford.edu email for your Gradescope account)
+• Final Default or Custom Course Project (1–3 people): 49%
+• Project proposal: 8%, milestone: 6%, poster or web summary: 3%, report: 32%
+• Participation: 3%
+• Guest lecture reactions, Ed, course evals, karma – see website!
+• Late day policy
+• 6 free late days; afterwards, 1% off course grade per day late
+• Assignments not accepted more than 3 days late per assignment unless given permission in advance
+6
+
+=== PAGE 7 ===
+Course work and grading policy
+• Collaboration policy: 
+• Please read the website and the Honor Code! Understand allowed collaboration and how to 
+document it: Don’t take code off the web; acknowledge working with other students; write your own 
+assignment solutions
+• Students must independently submit their solutions to CS224N homework
+•
+AI tools policy
+• Large language models are great, but we don’t want ChatGPT’s solutions to our assignment  
+• Collaboration with AI tools is allowed; asking it to answer questions is strictly prohibited
+• Employing AI tools to substantially complete assignments will be considered a violation of the Honor 
+Code (see Generative AI Policy Guidance here for more details)
+7
+
+=== PAGE 8 ===
+High-Level Plan for Assignments (to be completed individually!)
+• Hw1 is hopefully an easy on ramp – a Jupyter/IPython Notebook
+• Hw2 expects you to do (multivariate) calculus, so you really understand the basics, 
+introduces PyTorch, and you build a feed-forward network for dependency parsing
+• Hw3 and Hw4 use PyTorch on a GPU (Google Cloud)
+• Libraries like PyTorch, Tensorflow, and Jax are now the standard tools of DL
+• For Final Project, more details presented later, but you either:
+• Do the default project
+• You implement a BERT LLM and then fine-tune and adapt it for downstream tasks
+• Open-ended but an easier start; a good choice for many
+• Propose a custom final project, which we approve
+• You will receive feedback from a mentor (TA/prof/postdoc/PhD)
+• Can work in teams of 1–3; can use any language/packages
+8
+
+=== PAGE 9 ===
+Lecture Plan
+1. The course (10 mins)
+2. Human language and word meaning (15 mins)
+3. Word2vec introduction (15 mins)
+4. Word2vec objective function gradients (25 mins)
+5. Optimization basics (5 mins)
+6. Looking at word vectors (10 mins or less)
+9
+
+=== PAGE 10 ===
+
+=== PAGE 11 ===
+Trained on text data, neural machine translation is quite good!
+https://kiswahili.tuko.co.ke/
+
+=== PAGE 12 ===
+Free-text question answering: Next gen search
+12
+when did Kendrick lamar’s
+first album come out?
+July 2, 2011
+E.g., YONO (Lee et al. 2021) uses a T5 model fine-tuned for QA
+
+=== PAGE 13 ===
+The SEC said, “Musk, your tweets are a 
+blight.
+They really could cost you your job,
+if you don't stop all this tweeting at night.”
+Then Musk cried, “Why?
+The tweets I wrote are not mean,
+I don't use all-caps
+and I'm sure that my tweets are clean.”
+“But your tweets can move markets
+and that's why we're sore.
+You may be a genius and a billionaire,
+but it doesn't give you the right to
+How many users have signed up since the start of 2020?
+SELECT count(id) FROM users 
+WHERE created_at > ‘2020-01-01’
+What is the average number of influencers each user is 
+subscribed to?
+SELECT avg(count) FROM ( SELECT user_id, count(*) 
+FROM subscribers GROUP BY user_id ) 
+AS avg_subscriptions_per_user
+S: I broke the window.
+Q: What did I break?
+S: I gracefully saved the day.
+Q: What did I gracefully save?
+S: I gave John flowers.
+Q: Who did I give flowers to?
+S: I gave her a rose and a guitar.
+Q: Who did I give a rose and a guitar to?
+GPT-3: A first step on the path to foundation models
+a
+be
+bore!”
+
+=== PAGE 14 ===
+a train going over the Golden Gate bridge
+a train going over the Golden 
+Gate bridge with the bay in the 
+background
+a train going over the 
+Golden Gate bridge 
+detailed pencil drawing
+cars and a train on the 
+Golden Gate bridge 
+detailed pencil drawing
+Pictures by 
+OpenAI’s DALL-E 2
+
+=== PAGE 15 ===
+ChatGPT, GPT-4, and more
+
+=== PAGE 16 ===
+How do we represent the meaning of a word?
+16
+Definition: meaning (Webster dictionary)
+•
+the idea that is represented by a word, phrase, etc.
+•
+the idea that a person wants to express by using words, signs, etc.
+•
+the idea that is expressed in a work of writing, art, etc.
+Commonest linguistic way of thinking of meaning:
+signifier (symbol) ⟺ signified (idea or thing)
+= denotational semantics
+tree ⟺ {
+, 
+, 
+, …}
+
+=== PAGE 17 ===
+How do we have usable meaning in a computer?
+17
+Previously commonest NLP solution: Use, e.g., WordNet, a thesaurus containing lists of 
+synonym sets and hypernyms (“is a” relationships) 
+[Synset('procyonid.n.01'), 
+Synset('carnivore.n.01'), 
+Synset('placental.n.01'), 
+Synset('mammal.n.01'), 
+Synset('vertebrate.n.01'), 
+Synset('chordate.n.01'), 
+Synset('animal.n.01'), 
+Synset('organism.n.01'), 
+Synset('living_thing.n.01'), 
+Synset('whole.n.02'), 
+Synset('object.n.01'), 
+Synset('physical_entity.n.01'), 
+Synset('entity.n.01')]
+noun: good 
+noun: good, goodness 
+noun: good, goodness 
+noun: commodity, trade_good, good 
+adj: good 
+adj (sat): full, good 
+adj: good 
+adj (sat): estimable, good, honorable, respectable 
+adj (sat): beneficial, good 
+adj (sat): good 
+adj (sat): good, just, upright 
+…
+adverb: well, good 
+adverb: thoroughly, soundly, good
+e.g., synonym sets containing “good”:
+e.g., hypernyms of “panda”:
+from nltk.corpus import wordnet as wn
+poses = { 'n':'noun', 'v':'verb', 's':'adj (s)', 'a':'adj', 'r':'adv'}
+for synset in wn.synsets("good"):
+    print("{}: {}".format(poses[synset.pos()], 
+            ", ".join([l.name() for l in synset.lemmas()])))
+from nltk.corpus import wordnet as wn
+panda = wn.synset("panda.n.01")
+hyper = lambda s: s.hypernyms()
+list(panda.closure(hyper))
+
+=== PAGE 18 ===
+Problems with resources like WordNet
+18
+•
+A useful resource but missing nuance:
+•
+e.g., “proficient” is listed as a synonym for “good”
+This is only correct in some contexts
+•
+Also, WordNet list offensive synonyms in some synonym sets without any 
+coverage of the connotations or appropriateness of words
+•
+Missing new meanings of words:
+•
+e.g., wicked, badass, nifty, wizard, genius, ninja, bombest
+•
+Impossible to keep up-to-date!
+•
+Subjective
+•
+Requires human labor to create and adapt
+•
+Can’t be used to accurately compute word similarity (see following slides)
+
+=== PAGE 19 ===
+Representing words as discrete symbols
+19
+In traditional NLP, we regard words as discrete symbols: 
+ 
+ 
+ 
+hotel, conference, motel – a localist representation
+Such symbols for words can be represented by one-hot vectors:
+motel = [0 0 0 0 0 0 0 0 0 0 1 0 0 0 0]
+hotel = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0]
+Vector dimension = number of words in vocabulary (e.g., 500,000+)
+Means one 1, the rest 0s
+
+=== PAGE 20 ===
+Problem with words as discrete symbols
+Example: in web search, if a user searches for “Seattle motel”, we would like to match 
+documents containing “Seattle hotel”
+But:
+motel = [0 0 0 0 0 0 0 0 0 0 1 0 0 0 0]
+ hotel = [0 0 0 0 0 0 0 1 0 0 0 0 0 0 0]
+These two vectors are orthogonal
+There is no natural notion of similarity for one-hot vectors!
+Solution:
+• Could try to rely on WordNet’s list of synonyms to get similarity?
+• But it is well-known to fail badly: incompleteness, etc.
+• Instead: learn to encode similarity in the vectors themselves
+Sec. 9.2.2
+20
+
+=== PAGE 21 ===
+Representing words by their context
+21
+• Distributional semantics: A word’s meaning is given
+by the words that frequently appear close-by
+• “You shall know a word by the company it keeps” (J. R. Firth 1957: 11)
+• One of the most successful ideas of modern statistical NLP!
+• When a word w appears in a text, its context is the set of words that appear nearby 
+(within a fixed-size window).
+• We use the many contexts of w to build up a representation of w
+…government debt problems turning into banking crises as happened in 2009…
+…saying that Europe needs unified banking regulation to replace the hodgepodge…
+…India has just given its banking system a shot in the arm…
+These context words will represent banking
+
+=== PAGE 22 ===
+Word vectors
+22
+We will build a dense vector for each word, chosen so that it is similar to vectors of words 
+that appear in similar contexts, measuring similarity as the vector dot (scalar) product
+Note: word vectors are also called (word) embeddings or (neural) word representations
+They are a distributed representation
+banking  =
+0.286
+0.792
+−0.177
+−0.107
+0.109
+−0.542
+0.349
+0.271
+monetary  =
+0.413
+0.582
+−0.007
+0.247
+0.216
+−0.718
+0.147
+0.051
+
+=== PAGE 23 ===
+Word meaning as a neural word vector – visualization
+0.286
+0.792
+−0.177
+−0.107
+0.109
+−0.542
+0.349
+0.271
+0.487
+expect  =
+23
+
+=== PAGE 24 ===
+3. Word2vec: Overview
+Word2vec is a framework for learning word vectors
+(Mikolov et al. 2013)
+Idea:
+• We have a large corpus (“body”) of text: a long list of words
+• Every word in a fixed vocabulary is represented by a vector
+• Go through each position t in the text, which has a center 
+word c and context (“outside”) words o
+• Use the similarity of the word vectors for c and o to calculate 
+the probability of o given c (or vice versa)
+• Keep adjusting the word vectors to maximize this probability
+24
+Skip-gram model 
+(Mikolov et al. 2013) 
+
+=== PAGE 25 ===
+Word2Vec Overview
+Example windows and process for computing 𝑃𝑤𝑡+𝑗 | 𝑤𝑡
+…
+crises
+banking
+into
+turning
+problems
+…
+as
+center word
+at position t
+outside context words
+in window of size 2
+outside context words
+in window of size 2
+𝑃𝑤𝑡+1 | 𝑤𝑡
+𝑃𝑤𝑡+2 | 𝑤𝑡
+𝑃𝑤𝑡−1 | 𝑤𝑡
+𝑃𝑤𝑡−2 | 𝑤𝑡
+25
+
+=== PAGE 26 ===
+Word2Vec Overview
+Example windows and process for computing 𝑃𝑤𝑡+𝑗 | 𝑤𝑡
+…
+crises
+banking
+into
+turning
+problems
+…
+as
+center word
+at position t
+outside context words
+in window of size 2
+outside context words
+in window of size 2
+𝑃𝑤𝑡+1 | 𝑤𝑡
+𝑃𝑤𝑡+2 | 𝑤𝑡
+𝑃𝑤𝑡−1 | 𝑤𝑡
+𝑃𝑤𝑡−2 | 𝑤𝑡
+26
+
+=== PAGE 27 ===
+Word2Vec: objective function
+27
+For each position 𝑡= 1, … , 𝑇, predict context words within a window of fixed size m, 
+given center word 𝑤𝑡. Data likelihood:
+𝐿𝜃= ෑ
+𝑡=1
+𝑇
+ෑ
+−𝑚≤𝑗≤𝑚
+𝑗≠0
+𝑃𝑤𝑡+𝑗| 𝑤𝑡; 𝜃
+The objective function 𝐽𝜃 is the (average) negative log likelihood:
+𝐽𝜃= −1
+𝑇log 𝐿(𝜃) = −1
+𝑇෍
+𝑡=1
+𝑇
+෍
+−𝑚≤𝑗≤𝑚
+𝑗≠0
+log 𝑃𝑤𝑡+𝑗| 𝑤𝑡; 𝜃
+Minimizing objective function ⟺ Maximizing predictive accuracy
+Likelihood =
+𝜃 is all variables 
+to be optimized
+sometimes called a cost or loss function
+
+=== PAGE 28 ===
+Word2Vec: objective function
+28
+•
+We want to minimize the objective function:
+𝐽𝜃= −1
+𝑇෍
+𝑡=1
+𝑇
+෍
+−𝑚≤𝑗≤𝑚
+𝑗≠0
+log 𝑃𝑤𝑡+𝑗| 𝑤𝑡; 𝜃
+•
+Question: How to calculate 𝑃𝑤𝑡+𝑗 | 𝑤𝑡; 𝜃 ?
+•
+Answer: We will use two vectors per word w:
+•
+𝑣𝑤 when w is a center word
+•
+𝑢𝑤 when w is a context word
+•
+Then for a center word c and a context word o:
+𝑃𝑜𝑐=
+exp(𝑢𝑜𝑇𝑣𝑐)
+σ𝑤∈𝑉exp(𝑢𝑤𝑇𝑣𝑐)
+
+=== PAGE 29 ===
+Word2Vec with Vectors
+•
+Example windows and process for computing 𝑃𝑤𝑡+𝑗 | 𝑤𝑡
+•
+𝑃𝑢𝑝𝑟𝑜𝑏𝑙𝑒𝑚𝑠 | 𝑣𝑖𝑛𝑡𝑜 short for P 𝑝𝑟𝑜𝑏𝑙𝑒𝑚𝑠 | 𝑖𝑛𝑡𝑜 ; 𝑢𝑝𝑟𝑜𝑏𝑙𝑒𝑚𝑠, 𝑣𝑖𝑛𝑡𝑜, 𝜃
+…
+crises
+banking
+into
+turning
+problems
+…
+as
+center word
+at position t
+outside context words
+in window of size 2
+outside context words
+in window of size 2
+𝑃𝑢𝑏𝑎𝑛𝑘𝑖𝑛𝑔 |𝑣𝑖𝑛𝑡𝑜
+𝑃𝑢𝑐𝑟𝑖𝑠𝑖𝑠 |𝑣𝑖𝑛𝑡𝑜
+𝑃𝑢𝑡𝑢𝑛𝑖𝑛𝑔 | 𝑣𝑖𝑛𝑡𝑜
+𝑃𝑢𝑝𝑟𝑜𝑏𝑙𝑒𝑚𝑠 | 𝑣𝑖𝑛𝑡𝑜
+29
+
+=== PAGE 30 ===
+Word2Vec: prediction function
+𝑃𝑜𝑐=
+exp(𝑢𝑜𝑇𝑣𝑐)
+σ𝑤∈𝑉exp(𝑢𝑤𝑇𝑣𝑐)
+• This is an example of the softmax function ℝ𝑛→(0,1)𝑛
+softmax 𝑥𝑖=
+exp(𝑥𝑖)
+σ𝑗=1
+𝑛
+exp(𝑥𝑗) = 𝑝𝑖
+• The softmax function maps arbitrary values 𝑥𝑖 to a probability distribution 𝑝𝑖
+• “max” because amplifies probability of largest 𝑥𝑖
+• “soft” because still assigns some probability to smaller 𝑥𝑖
+• Frequently used in Deep Learning
+① Dot product compares similarity of o and c.
+ 𝑢𝑇𝑣= 𝑢⋅𝑣= σ𝑖=1
+𝑛
+𝑢𝑖𝑣𝑖
+Larger dot product = larger probability
+③ Normalize over entire vocabulary 
+to give probability distribution
+30
+② Exponentiation makes anything positive
+Open 
+region
+But sort of a weird name 
+because it returns a distribution!
+
+=== PAGE 31 ===
+To train the model: Optimize value of parameters to minimize loss
+31
+To train a model, we gradually adjust parameters to minimize a loss
+• Recall: 𝜃 represents all the 
+model parameters, in one
+long vector
+• In our case, with 
+d-dimensional vectors and 
+V-many words, we have →
+• Remember: every word has 
+two vectors
+• We optimize these parameters by walking down the gradient (see right figure)
+• We compute all vector gradients!
+
+=== PAGE 32 ===
+Interactive Session!
+32
+• 𝐿𝜃= ς𝑡=1
+𝑇
+ς−𝑚≤𝑗≤𝑚
+𝑗≠0
+𝑃𝑤𝑡+𝑗 | 𝑤𝑡; 𝜃
+• For a center word c and a context word o:   𝑃𝑜𝑐=
+exp(𝑢𝑜𝑇𝑣𝑐)
+σ𝑤∈𝑉exp(𝑢𝑤
+𝑇𝑣𝑐)
+
+=== PAGE 33 ===
+5. Optimization: Gradient Descent
+• We have a cost function 𝐽𝜃 we want to minimize
+• Gradient Descent is an algorithm to minimize 𝐽𝜃 
+• Idea: for current value of 𝜃, calculate gradient of 𝐽𝜃, then take small step in direction 
+of negative gradient. Repeat.
+Note: Our 
+objectives
+may not 
+be convex
+like this 
+But life turns 
+out to be 
+okay ☺
+40
+
+=== PAGE 34 ===
+• Update equation (in matrix notation):
+• Update equation (for single parameter):
+• Algorithm:
+Gradient Descent
+𝛼 = step size or learning rate
+41
+
+=== PAGE 35 ===
+Stochastic Gradient Descent
+• Problem: 𝐽𝜃 is a function of all windows in the corpus (potentially billions!)
+• So                 is very expensive to compute
+• You would wait a very long time before making a single update!
+• Very bad idea for pretty much all neural nets!
+• Solution: Stochastic gradient descent (SGD)
+•
+Repeatedly sample windows, and update after each one
+• Algorithm:
+42
+Mini Batch 
+Gradient Descent
+
+=== PAGE 36 ===
+Lecture Plan
+1. The course (10 mins)
+2. Human language and word meaning (15 mins)
+3. Word2vec introduction (15 mins)
+4. Word2vec objective function gradients (25 mins)
+5. Optimization basics (5 mins)
+43

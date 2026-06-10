@@ -1,185 +1,157 @@
-## skipgram-softmax — Skip-gram [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] P(o|c) 概率计算 {#skipgram-softmax}
+## skipgram-softmax — Skip-gram Softmax 概率计算 P(o|c) {#skipgram-softmax}
 
-> [!info] 本 capsule 解释什么
-> **Waypoint WP03**：用中心词预测上下文词时，[[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] 如何把"相似度分数"变成"概率分布" P(o|c)。
-> **官方锚点**：Slides p27-30（objective function, [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]]）；Notes §3.2（Eq.4 [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]]，Eq.5 cross-entropy loss）。
+> **Waypoint**: WP03 — Word2Vec / Skip-gram / Softmax
+> **概念**：用 center word 的向量和所有 context words 的向量做点积，再经 softmax 归一化成概率分布
+> **官方锚点**：Slides p27-30 (objective function, softmax); Notes §3.2 Eq.4-5
 
-### 为什么不能只看文字？
+### 为什么不能只看文字
 
-Slides p28 给出了 [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] 公式：
+Slides p28-30 和 Notes §3.2 给出了 softmax 公式：
 
-$$P(o|c) = \frac{\exp(u_o^\top v_c)}{\sum_{w \in V} \exp(u_w^\top v_c)}$$
+$$P(o|c) = \frac{\exp(u_o^T v_c)}{\sum_{w \in V} \exp(u_w^T v_c)}$$
 
-但只看公式，你很难感受到：
-1. **分母 Z 要遍历整个词汇表**——当 |V|=50,000 时，每算一个 P(o|c) 要做 50,000 次点积+指数运算
-2. **语义相似的词确实得到更高概率**——需要看到具体数字才能建立直觉
-3. **三步分解（点积→指数→归一化）**——每步对数值的影响需要可视化
+但只看公式很难理解：
+1. **分母的归一化到底在做什么**——它把 |V| 个 exp 值变成和为 1 的概率分布
+2. **训练前后有什么区别**——随机初始化时所有概率几乎一样，训练后语义相关词的概率显著升高
+3. **计算量问题**——分母要算 |V| 个 exp，这就是 WP04 引入 Negative Sampling 的原因
 
-> [!tip] 中文扶手
-> 把 [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] 想成"考试排名转百分比"：
-> 1. **点积** = 原始分数（越高越像）
-> 2. **指数** = 把负分转正、拉大差距
-> 3. **除以总分** = 变成加起来=100% 的百分比
+这个 capsule 用一个 8 词的小词汇表，把每一步都算出来给你看。
 
-### 代码：mini vocabulary 上的完整计算
+### 运行方式
 
-> **运行方式**：
-> - 本地：`.venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py`
-> - Colab：点击下方链接直接打开
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/Labs/L01-word-vectors/skipgram-softmax.ipynb)
-
-```python
-import numpy as np
-
-np.random.seed(42)
-
-# 6 个词的 mini 词汇表，d=4 维向量（toy example）
-vocab = ["banking", "money", "river", "bank", "crisis", "water"]
-V = len(vocab)
-d = 4
-
-# 每个词有两个向量：v_w（center）和 u_w（context）
-V_matrix = np.array([
-    [ 0.5,  0.8, -0.2,  0.3],   # banking
-    [ 0.4,  0.7, -0.1,  0.2],   # money
-    [-0.3,  0.1,  0.9,  0.6],   # river
-    [ 0.2,  0.5,  0.4,  0.5],   # bank
-    [-0.5,  0.6, -0.3,  0.1],   # crisis
-    [-0.2,  0.0,  0.8,  0.7],   # water
-])
-
-U_matrix = np.array([
-    [ 0.6,  0.7, -0.3,  0.2],   # banking
-    [ 0.5,  0.8, -0.2,  0.1],   # money
-    [-0.4,  0.2,  0.8,  0.5],   # river
-    [ 0.3,  0.6,  0.3,  0.4],   # bank
-    [-0.6,  0.5, -0.4,  0.0],   # crisis
-    [-0.3,  0.1,  0.7,  0.6],   # water
-])
-
-# 中心词 = "banking"
-v_c = V_matrix[0]
-
-# Step 1: 点积
-dot_products = U_matrix @ v_c
-# Step 2: 指数
-exp_scores = np.exp(dot_products)
-# Step 3: 归一化
-Z = np.sum(exp_scores)
-probs = exp_scores / Z
+**本地运行**：
+```bash
+cd /workspace/cs224n-study
+.venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
 ```
 
-### 真实输出
+**Colab 运行**：
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/skipgram-softmax.ipynb)
 
-> [!example] Step 1：点积 u_w^T · v_c
-> ```
-> u_banking^T · v_banking =  0.980000
-> u_money^T   · v_banking =  0.960000
-> u_river^T   · v_banking = -0.050000
-> u_bank^T    · v_banking =  0.690000
-> u_crisis^T  · v_banking =  0.180000
-> u_water^T   · v_banking = -0.030000
-> ```
-> banking 和 money 的点积最高（0.98, 0.96）——因为它们的向量方向最接近。
+### 代码结构
 
-> [!example] Step 2：指数化
-> ```
-> exp(0.980000) = 2.664456
-> exp(0.960000) = 2.611696
-> exp(-0.050000) = 0.951229
-> exp(0.690000) = 1.993716
-> exp(0.180000) = 1.197217
-> exp(-0.030000) = 0.970446
-> ```
+脚本分为三部分：
 
-> [!example] Step 3：归一化（除以 Z）
-> ```
-> Z = 10.388761
-> P(banking|banking) = 0.256475  ████████████
-> P(money|banking)   = 0.251396  ████████████
-> P(river|banking)   = 0.091563  ████
-> P(bank|banking)    = 0.191911  █████████
-> P(crisis|banking)  = 0.115242  █████
-> P(water|banking)   = 0.093413  ████
-> Sum = 1.0000000000
-> ```
+**Part A: 随机初始化（训练前）**
+- 随机生成 center 向量 V 和 context 向量 U（标准差 0.1）
+- 选 "banking" 作为 center word
+- 计算与所有 context words 的点积 → softmax
+- **结果**：所有词的概率约 0.125（= 1/8），几乎没有区分
 
-### 关键发现
+**Part B: 手工设计的"训练后"向量**
+- 金融词（banking/money/credit/loan）在第 0 维有较大的正值
+- 河流词（river/stream/water）在第 1 维有较大的正值
+- bank（歧义词）在两维都有中等值
+- **结果**：金融词概率显著升高（credit: 0.173），河流词显著降低（water: 0.072）
 
-> [!tip] 语义相似性 → 更高概率
-> 当 c='banking' 时：
-> - P(**money**|banking) = **0.251396**（语义相似：金融相关）
-> - P(**river**|banking) = **0.091563**（语义不同：自然水体）
-> - **比值 = 2.75x**
->
-> 这是因为 v_banking 和 u_money 方向接近 → 点积大 → exp 大 → 概率高。
+**Part C: 对比总结**
+- 随机 vs 训练后的概率对比表
+- 训练的目标（Notes Eq.5）就是调整 U、V 使真实 context word 的概率最大
 
-![skipgram-softmax-prob-distribution](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-161016.png)
-> 不同中心词（banking/river/crisis）的概率分布对比。注意每个中心词的"最高概率词"不同——banking 给 money 最高，river 给 river 自己和 water 最高。
+### 输出图表
 
-### Softmax 三步可视化
+#### 图 1：训练后的概率分布
 
-![skipgram-softmax-three-steps](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-161019.png)
-> 同一个例子（c='banking'）的三步分解：① 点积（原始相似度）→ ② 指数（转正+放大）→ ③ 归一化（÷Z=10.389 得到概率）。
+![skipgram-softmax-probability-bar](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-174352.png)
 
-### 计算瓶颈：为什么需要负采样？
+**先看哪里**：x 轴是 context word，y 轴是概率 P(o|c)。虚线是均匀分布 1/8 = 0.125。
 
-> [!warning] 分母 Z 是效率杀手
-> Z = Σ_{w∈V} exp(u_w^T v_c) 需要遍历**整个词汇表**。
-> - |V|=50,000 时，每步 50,000 次点积
-> - T=10M tokens 的语料，一个 epoch = 5×10¹¹ 次运算
->
-> 这就是 WP05 **负采样**要解决的问题：用 k 个二分类替代全词表 [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]]，把 O(|V|) 降到 O(k)。
+**关键观察**：
+- 蓝色柱子（金融词：banking/money/credit/loan）明显高于虚线
+- 绿色柱子（河流词：river/stream/water）明显低于虚线
+- 橙色柱子（bank，歧义词）在中间
 
-![skipgram-softmax-computation-cost](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-161022.png)
-> 词汇量 vs 计算量（对数坐标）。|V|=100,000 时，一个 epoch 需要 10¹² 次运算——这在 2013 年是不可接受的。
+**课堂结论**：训练后的词向量让 softmax 能给语义相关的词分配更高的概率。
 
-### 对应 Slides / Notes 位置
+#### 图 2：点积 vs 概率对比
 
-| 本 capsule 概念 | Slides | Notes |
+![skipgram-softmax-dotscore-vs-prob](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-174401.png)
+
+**先看哪里**：左图是点积分数（u_w^T v_c），右图是 softmax 后的概率。
+
+**关键观察**：
+- 点积越高 → exp 越大 → 概率越高
+- softmax 的"放大"效果：点积的差异被指数化放大了
+
+#### 图 3：随机 vs 训练后对比
+
+![skipgram-softmax-random-vs-trained](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-174404.png)
+
+**先看哪里**：灰色柱子是随机初始化，蓝色柱子是训练后。
+
+**关键观察**：
+- 随机初始化：所有柱子几乎一样高（~0.125）
+- 训练后：金融词升高，河流词降低
+- 这就是训练的效果——让模型学会区分语义
+
+### 关键数值（来自真实输出）
+
+| Word | P_random | P_trained | Delta |
+|------|----------|-----------|-------|
+| banking | 0.1236 | 0.1948 | +0.0712 |
+| money | 0.1249 | 0.1548 | +0.0299 |
+| river | 0.1248 | 0.0717 | -0.0532 |
+| bank | 0.1259 | 0.1158 | -0.0101 |
+| stream | 0.1251 | 0.0784 | -0.0467 |
+| credit | 0.1272 | 0.1728 | +0.0456 |
+| loan | 0.1268 | 0.1401 | +0.0133 |
+| water | 0.1217 | 0.0717 | -0.0500 |
+
+**最高/最低比值**：
+- 随机初始化：1.05x（几乎没区别）
+- 训练后：2.72x（明显区分）
+
+### 和课堂概念的对应
+
+| 本 capsule | 官方材料 | Glossary |
 |---|---|---|
-| 每词两向量 v_w, u_w | p28 上方 | §3.2 开头 |
-| [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] 公式 | p28 公式 | Eq.4 |
-| 交叉熵损失 | p27 | Eq.5 |
-| 三步分解 | p30 | — |
-| 计算瓶颈 → 负采样动机 | p28 warning | §3.5 开头 |
+| 点积 u_o^T v_c | Slides p28, Notes Eq.4 分子 | [[Lectures/L01-word-vectors/00-concept-glossary#dot-product\|dot product]] |
+| Softmax 归一化 | Slides p30, Notes Eq.4 分母 | [[Lectures/L01-word-vectors/00-concept-glossary#softmax\|softmax]] |
+| Center/context 向量 | Slides p25-26, p28 | [[Lectures/L01-word-vectors/00-concept-glossary#skip-gram\|skip-gram]] |
+| 训练目标 | Notes Eq.5: min E[-log P(o\|c)] | [[Lectures/L01-word-vectors/00-concept-glossary#sgd\|SGD]] |
+| 计算量问题 | → WP04 Negative Sampling | [[Lectures/L01-word-vectors/00-concept-glossary#negative-sampling\|negative sampling]] |
 
-### 现在应该能说出
+### 容易误解的地方
 
-1. [[Lectures/L01-word-vectors/00-concept-glossary#skip-gram|skip-gram]] 模型的目标是什么？（用中心词预测上下文词）
-2. 为什么每个词需要两个向量？（作中心词和作上下文词时的角色不同）
-3. [[Lectures/L01-word-vectors/00-concept-glossary#softmax|softmax]] 的三步是什么？（点积→指数→归一化）
-4. 为什么分母 Z 是计算瓶颈？（要遍历全词表）
-5. 这个瓶颈怎么解决？（→ WP05 负采样）
+1. **Softmax 本身不"学习"**：它只是一个数学函数，把分数变成概率。真正在学习的是向量 U 和 V（通过梯度下降，见 WP04）。
 
-> [!question] 暂停复述
-> 不看上面的输出，你能说出 P(money|banking) 和 P(river|banking) 哪个更大、为什么吗？
-> 如果说不出来，回去看 Step 1 的点积部分。
+2. **为什么每个词有两个向量**：v_w 是 center word 时的向量，u_w 是 context word 时的向量。这看起来浪费，但数学上方便（训练后可以合并或只用一套）。
 
----
+3. **分母的计算量**：要算 |V| 个 exp。如果词汇表有 50000 个词，每次更新都要算 50000 个 exp——这就是为什么 WP04 要引入 Negative Sampling。
+
+### 暂停复述
+
+现在你应该能说出：
+1. Softmax 的三步计算：点积 → 减 max → exp → 归一化
+2. 训练前后概率分布的变化：从均匀到有区分
+3. 分母的计算量问题：O(|V|)，引出 Negative Sampling
+
+如果不确定，可以问 Hermes：
+- "softmax 的分母为什么叫 partition function？"
+- "为什么每个词需要两个向量而不是一个？"
+- " Negative Sampling 怎么解决分母计算量的问题？"
+
+### 数值来源证明
 
 ```yaml
 numeric_provenance:
-  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T080907Z__t_832bffea__skipgram-softmax
+  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T094936Z__t_9a2158c5__skipgram-softmax
   stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
+  json: Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
   checked_values:
-    - claim: "P(money|banking) = 0.251396"
-      source: "stdout line 'P(   money | banking) = 0.251396'"
+    - claim: "随机初始化最高/最低比值 1.05x"
+      source: "stdout Part A: Ratio: 1.05x"
       status: copied_from_output
-    - claim: "P(river|banking) = 0.091563"
-      source: "stdout line 'P(   river | banking) = 0.091563'"
+    - claim: "训练后最高 P(banking|banking) = 0.194811"
+      source: "stdout Part B: banking 0.194811"
       status: copied_from_output
-    - claim: "Ratio = 2.75x"
-      source: "stdout line 'Ratio = 2.75x'"
+    - claim: "训练后最低 P(water|banking) = 0.071667"
+      source: "stdout Part B: water 0.071667"
       status: copied_from_output
-    - claim: "Z = 10.388761"
-      source: "stdout line 'Partition function Z = ... = 10.388761'"
+    - claim: "训练后最高/最低比值 2.72x"
+      source: "stdout Part B: Ratio: 2.72x"
       status: copied_from_output
-    - claim: "dot(banking) = 0.980000"
-      source: "stdout line 'u_ banking^T · v_banking = 0.980000'"
-      status: copied_from_output
-    - claim: "Sum of probabilities = 1.0"
-      source: "stdout line 'Sum of all probabilities = 1.0000000000'"
+    - claim: "对比表中 credit P_trained = 0.1728"
+      source: "stdout Part C: credit 0.1728"
       status: copied_from_output
 ```

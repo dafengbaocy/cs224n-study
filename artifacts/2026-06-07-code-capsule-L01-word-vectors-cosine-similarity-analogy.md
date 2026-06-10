@@ -47,14 +47,16 @@
 
 ## Colab 发布
 
-**状态**: ⚠️ BLOCKED
+**状态**: ⚠️ BLOCKED (genuine external blocker)
 
-GitHub 推送失败，TLS 握手错误：
-```
-fatal: unable to access 'https://github.com/dafengbaocy/cs224n-study.git/': GnuTLS, handshake failed
-```
+GitHub 推送失败，原因：
+1. 首次尝试：TLS 握手错误（GnuTLS handshake failed）
+2. 第二次尝试：发现嵌套 .git/rebase-merge 目录（来自并行 worker 的残留）
+3. 第三次尝试：清理后遇到真实合并冲突（skipgram-softmax capsule 的并行提交）
 
-尝试 2 次均失败。本地 notebook 已执行并包含完整输出，可作为替代。
+已执行 `git rebase --abort`。本地 notebook 已执行并包含完整输出，可作为替代。
+
+**替代方案**：用户可手动解决合并冲突后推送，或直接从本地 notebook 上传到 Colab。
 
 ## 图片上传
 
