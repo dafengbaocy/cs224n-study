@@ -6,7 +6,7 @@
 
 **官方锚点**: A1 Part 2 Q2.2-2.6 (cosine similarity, analogy); Notes §3.1 仅简述
 
-**Colab**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/cosine-similarity-analogy.ipynb)
+**Colab**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/Labs/L01-word-vectors/cosine-similarity-analogy.ipynb)
 
 ---
 
@@ -133,7 +133,7 @@ A1 Part 2 Q2.2-2.6 要求你：
 
 ```yaml
 numeric_provenance:
-  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T102425Z__t_48b9a9f8__cosine-similarity-analogy
+  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T112330Z__t_48b9a9f8__cosine-similarity-analogy
   stdout: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stdout.txt
   checked_values:
     - claim: "cos(king, queen) = 0.6157"
