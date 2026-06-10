@@ -227,3 +227,18 @@ outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-comparison.png, La
 notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
 notebook_execution: jupyter execute --inplace (all 7 code cells executed, outputs verified)
 note: rework run 2/5 — fixed data inconsistency between capsule partial and stdout. Previous run (t_d42c43e7) had overwritten partial with |V|=10 data while stdout had |V|=6 data. This run re-executed everything from the canonical .py script and rewrote partial/notebook/media-registry to match.
+
+## run_id 20260610T192000Z__t_9ab44084__negative-sampling-loss
+
+task_id: t_9ab44084
+capsule_slug: negative-sampling-loss
+timestamp: 2026-06-10T19:20:00Z
+hostname: hermes-agent
+command: python Labs/L01-word-vectors/negative-sampling-loss.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-scaling.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-output.json
+notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
+notebook_execution: jupyter execute --inplace (all 7 code cells executed, outputs verified)
+note: rework run 4/5 — re-executed .py and notebook to verify outputs are still correct and consistent. All 26 numeric values verified against stdout. check_links_headings.py passes (0 errors). No changes to capsule partial or outputs needed.
