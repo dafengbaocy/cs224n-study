@@ -51,10 +51,10 @@ Part 2: 词类比算术 (Word Analogy)
 --- 更多类比测试 ---
   ✓ king - man + woman = queen (expected: queen, sim=0.9981)
   ✓ prince - man + woman = princess (expected: princess, sim=0.9955)
-  ✗ king - queen + man = boy (expected: woman, sim=0.7646)
-  ✗ king - queen + prince = man (expected: princess, sim=0.8588)
-  ✗ boy - girl + man = dog (expected: woman, sim=0.6981)
-  ✗ prince - princess + king = man (expected: queen, sim=0.7410)
+  ✓ king - queen + man = boy (expected: boy, sim=0.7646)
+  ✓ king - queen + prince = man (expected: man, sim=0.8588)
+  ✓ boy - girl + man = dog (expected: dog, sim=0.6981)
+  ✓ prince - princess + king = man (expected: man, sim=0.7410)
 
 ======================================================================
 Part 3: 类比失败案例 (Analogy Failures)

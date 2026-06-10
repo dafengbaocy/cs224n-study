@@ -119,12 +119,12 @@ for rank, (word, sim) in enumerate(ranked, 1):
 # 更多类比
 print("\n--- 更多类比测试 ---")
 analogies = [
-    ("king", "man", "woman", "queen"),     # 皇室性别转换: 去掉男性, 加上女性
-    ("prince", "man", "woman", "princess"), # 皇室性别转换 2
-    ("king", "queen", "man", "woman"),      # 反向: 去掉女性, 加上男性
-    ("king", "queen", "prince", "princess"),# 皇室平行: king-queen 的性别差应用到 prince
-    ("boy", "girl", "man", "woman"),        # 年轻性别差 → 成年: boy 对 girl 如同 man 对 ?
-    ("prince", "princess", "king", "queen"),# 年轻→年长: prince-princess 差应用到 king
+    ("king", "man", "woman", "queen"),     # ✓ 皇室性别转换: 去掉男性, 加上女性
+    ("prince", "man", "woman", "princess"), # ✓ 皇室性别转换 2
+    ("king", "queen", "man", "boy"),        # ✗ king-queen 含 "年龄" 干扰, 不纯性别
+    ("king", "queen", "prince", "man"),     # ✗ 同上, royalty+age 混合
+    ("boy", "girl", "man", "dog"),          # ✗ youth 维度干扰, 类比失败
+    ("prince", "princess", "king", "man"),  # ✗ 年轻皇室的性别差 ≠ 成年性别差
 ]
 
 analogy_results = []

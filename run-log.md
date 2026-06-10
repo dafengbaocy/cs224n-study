@@ -61,3 +61,40 @@ Notes on run:
 - No errors, no skipped cells.
 - k=20 uses replace=True because toy vocab (12 words) has only 11 available negatives.
 - Efficiency test uses realistic d=300, |V| up to 100,000.
+
+## run_id 20260610T040413Z__t_d8fef150__co-occurrence-matrix
+
+task_id: t_d8fef150
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T04:04:13Z
+hostname: 0d61b5cf12fa
+command: python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty — no errors)
+outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/co-occurrence-matrix.ipynb
+
+Notes:
+- Script ran without errors on first attempt.
+- No cells skipped; all code executed sequentially.
+- No cached results; fresh run from source.
+- Corpus: 14 sentences, 105 tokens, |V|=32.
+- Window=2, log-normalized SVD to 2D.
+- Key finding: same-cluster cosine similarities (banking-money=0.9638, river-lake=0.9911) are generally higher than cross-cluster (finance-mountain=0.6404), demonstrating distributional semantics.
+- Toy corpus limitation: function words (the, and) still dominate; cross-cluster similarities remain high due to small corpus size.
+
+## run_id 20260610T040425Z__t_dff9aa12__cosine-similarity-analogy
+
+task_id: t_dff9aa12
+capsule_slug: cosine-similarity-analogy
+timestamp: 2026-06-10T04:04:25Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/cosine-similarity-analogy.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
+notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
+notes: Clean run, no errors. Toy 4D vectors designed with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 3 plots generated successfully.
