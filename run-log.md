@@ -98,3 +98,17 @@ stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
 notes: Clean run, no errors. Toy 4D vectors designed with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 3 plots generated successfully.
+
+## run_id 20260610T102425Z__t_48b9a9f8__cosine-similarity-analogy
+
+task_id: t_48b9a9f8
+capsule_slug: cosine-similarity-analogy
+timestamp: 2026-06-10T10:24:25Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/cosine-similarity-analogy.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt (empty — no errors)
+outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
+notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
+note: Re-run with updated notebook (added Chinese teaching sections). Used .venv/bin/python because numpy/matplotlib not in system python. Deterministic toy vectors, no randomness. All 3 plots generated successfully. Exit 0 no errors.

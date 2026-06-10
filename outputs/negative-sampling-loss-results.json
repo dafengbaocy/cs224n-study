@@ -1,0 +1,62 @@
+{
+  "vocab_size": 10,
+  "embedding_dim": 4,
+  "center_word": "bank",
+  "positive_word": "river",
+  "negative_words": [
+    "car",
+    "loan",
+    "market",
+    "cat",
+    "money"
+  ],
+  "negative_k": 5,
+  "full_softmax": {
+    "loss": 2.294274,
+    "positive_prob": 0.100835,
+    "terms": 10,
+    "complexity": "O(|V|)=O(10)"
+  },
+  "negative_sampling": {
+    "loss": 4.15277,
+    "positive_loss": 0.688336,
+    "negative_loss": 3.464433,
+    "positive_sigmoid": 0.502411,
+    "terms": 6,
+    "complexity": "O(k)=O(6)"
+  },
+  "training": {
+    "lr": 0.05,
+    "steps": 100,
+    "init_pos_cos": 0.7617,
+    "final_pos_cos": 0.9438,
+    "init_neg_cos": -0.0221,
+    "final_neg_cos": -0.6993,
+    "history": {
+      "step": [
+        0,
+        20,
+        40,
+        60,
+        80,
+        100
+      ],
+      "pos": [
+        0.7617,
+        0.8342,
+        0.8796,
+        0.9093,
+        0.9295,
+        0.9438
+      ],
+      "neg": [
+        -0.0221,
+        -0.1985,
+        -0.3621,
+        -0.5046,
+        -0.6166,
+        -0.6993
+      ]
+    }
+  }
+}

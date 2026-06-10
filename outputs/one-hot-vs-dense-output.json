@@ -1,0 +1,74 @@
+{
+  "capsule": "one-hot-vs-dense",
+  "waypoint": "WP01",
+  "vocab": [
+    "hotel",
+    "motel",
+    "book",
+    "cat",
+    "dog",
+    "fish"
+  ],
+  "vocab_size": 6,
+  "one_hot_results": [
+    {
+      "pair": "hotel-motel",
+      "relation": "synonyms — should be similar",
+      "dot_product": 0.0
+    },
+    {
+      "pair": "cat-dog",
+      "relation": "both animals — should be somewhat similar",
+      "dot_product": 0.0
+    },
+    {
+      "pair": "book-fish",
+      "relation": "unrelated — should be dissimilar",
+      "dot_product": 0.0
+    }
+  ],
+  "dense_vectors": {
+    "hotel": [
+      0.8,
+      0.7
+    ],
+    "motel": [
+      0.7,
+      0.75
+    ],
+    "book": [
+      -0.5,
+      0.3
+    ],
+    "cat": [
+      0.1,
+      -0.8
+    ],
+    "dog": [
+      0.3,
+      -0.6
+    ],
+    "fish": [
+      -0.2,
+      -0.9
+    ]
+  },
+  "dense_results": [
+    {
+      "pair": "hotel-motel",
+      "relation": "synonyms — should be similar",
+      "cosine_similarity": 0.9949
+    },
+    {
+      "pair": "cat-dog",
+      "relation": "both animals — should be somewhat similar",
+      "cosine_similarity": 0.943
+    },
+    {
+      "pair": "book-fish",
+      "relation": "unrelated — should be dissimilar",
+      "cosine_similarity": -0.3162
+    }
+  ],
+  "chart_path": "/workspace/cs224n-study/Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.png"
+}
