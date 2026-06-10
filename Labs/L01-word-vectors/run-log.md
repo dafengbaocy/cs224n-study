@@ -1,13 +1,36 @@
 
+<<<<<<< HEAD
 ## run_id 20260610T035926Z__t_50c67b60__one-hot-vs-dense
 
 task_id: t_50c67b60
 capsule_slug: one-hot-vs-dense
 timestamp: 2026-06-10T03:59:26Z
+=======
+## run_id 20260610T100302Z__t_2397e6e3__one-hot-vs-dense
+
+task_id: t_2397e6e3
+capsule_slug: one-hot-vs-dense
+timestamp: 2026-06-10T10:03:02Z
+hostname: 0d61b5cf12fa
+command: python Labs/L01-word-vectors/one-hot-vs-dense.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.png, Labs/L01-word-vectors/outputs/one-hot-vs-dense-results.json
+notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
+note: re-run after review BLOCK (deterministic check scripts were missing); capsule partial rewritten to match actual stdout
+
+## run_id 20260610T100536Z__t_ec7c208c__one-hot-vs-dense
+
+task_id: t_ec7c208c
+capsule_slug: one-hot-vs-dense
+timestamp: 2026-06-10T10:05:36Z
+>>>>>>> 1bdfb16 (Add one-hot-vs-dense capsule)
 hostname: 0d61b5cf12fa
 command: .venv/bin/python Labs/L01-word-vectors/one-hot-vs-dense.py
 exit_code: 0
 stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
+<<<<<<< HEAD
 stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt (no errors)
 outputs:
   - Labs/L01-word-vectors/outputs/one-hot-vs-dense-results.json
@@ -98,160 +121,22 @@ stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
 notes: Clean run, no errors. Toy 4D vectors designed with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 3 plots generated successfully.
+=======
+stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.png, Labs/L01-word-vectors/outputs/one-hot-vs-dense-results.json
+notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
+note: fresh run for task t_ec7c208c; toy dense vectors adjusted for clear contrast (book-fish cos=-0.2195 vs hotel-motel cos=0.9980)
+>>>>>>> 1bdfb16 (Add one-hot-vs-dense capsule)
+## run_id 20260610T100853Z__t_9a968d54__cosine-similarity-analogy
 
-## run_id 20260610T080907Z__t_832bffea__skipgram-softmax
-
-task_id: t_832bffea
-capsule_slug: skipgram-softmax
-timestamp: 2026-06-10T08:09:07Z
-hostname: 0d61b5cf12fa
-command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty — no errors)
-outputs:
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-three-steps.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-computation-cost.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-output.json
-notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
-notes: |
-  Script ran cleanly with exit code 0. No errors or warnings.
-  numpy seed=42 for reproducibility. Mini vocabulary of 6 words, d=4.
-  All three plots generated successfully.
-  Key output values: P(money|banking)=0.251396, P(river|banking)=0.091563, ratio=2.75x.
-  Partition function Z=10.388761 for center word 'banking'.
-  Previous run (t_c7e1b594) had different output file names; this revision supersedes it.
-
-
-## run_id 20260610T081806Z__t_18fe1985__cosine-similarity-analogy
-
-task_id: t_18fe1985
+task_id: t_9a968d54
 capsule_slug: cosine-similarity-analogy
-timestamp: 2026-06-10T08:18:06Z
+timestamp: 2026-06-10T10:08:53Z
 hostname: 0d61b5cf12fa
-command: .venv/bin/python cosine-similarity-analogy.py
+command: .venv/bin/python Labs/L01-word-vectors/cosine-similarity-analogy.py
 exit_code: 0
 stdout: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt (empty — no errors)
-outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
+stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-pca-2d.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results.json
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
-notes: Clean run, no errors. Toy 4D vectors with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 6 analogy tests pass. 2 failure cases demonstrated (cross-domain, no-relation). 3 plots generated. No cells skipped, no cache used.
-
-## run_id 20260610T081828Z__t_64256cc7__co-occurrence-matrix
-
-task_id: t_64256cc7
-capsule_slug: co-occurrence-matrix
-timestamp: 2026-06-10T08:18:28Z
-hostname: 0d61b5cf12fa
-environment: Python 3.13.5, venv /workspace/cs224n-study/.venv, numpy 2.4.6, matplotlib 3.10.9, scipy 1.17.1
-command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
-workdir: /workspace/cs224n-study
-exit_code: 0
-stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty)
-stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
-outputs:
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-heatmap.png (105660 bytes)
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png (90693 bytes)
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-window-comparison.png (105025 bytes)
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-coordinates.json (2094 bytes)
-notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
-notes: |
-  No errors. Script ran once, all cells executed.
-  Corpus: 14 sentences (6 finance + 6 nature + 2 bridge), 15 words vocabulary.
-  Window size = 2 (default), compared with 1, 2, 4.
-  Matrix: 15x15, 64.4% sparse, 140 total co-occurrence count.
-  SVD k=2 explained variance: 75.3%.
-  Within-cluster cosine mean: 0.9932, cross-cluster: 0.1508.
-  No cells skipped. No cache used.
-
-## run_id 20260610T094508Z__t_87d53a54__negative-sampling-loss
-
-task_id: t_87d53a54
-capsule_slug: negative-sampling-loss
-timestamp: 2026-06-10T09:45:08Z
-hostname: 0d61b5cf12fa
-command: .venv/bin/python Labs/L01-word-vectors/negative-sampling-loss.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
-outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-and-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-summary.json
-notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
-notes: Script ran without errors. Full softmax loss=2.7730, SGNS loss=4.0589 (k=5). Gradient direction plot saved. Toy data with seed=42 for reproducibility.
-
-## run_id 20260610T094926Z__t_9a2158c5__skipgram-softmax
-
-task_id: t_9a2158c5
-capsule_slug: skipgram-softmax
-timestamp: 2026-06-10T09:49:26Z
-hostname: 0d61b5cf12fa
-command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty - no warnings after CJK fix)
-outputs:
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-probability-bar.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-dotscore-vs-prob.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-random-vs-trained.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
-notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
-colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/skipgram-softmax.ipynb
-note: Script ran without errors. Two parts: (A) random init shows uniform probs ~0.125, (B) hand-designed trained vectors show semantic clustering. 3 plots generated with English labels (CJK font unavailable in headless env). All images uploaded to obsidian-image host.
-
-## run_id 20260610T094936Z__t_9a2158c5__skipgram-softmax
-
-task_id: t_9a2158c5
-capsule_slug: skipgram-softmax
-timestamp: 2026-06-10T09:49:36Z
-hostname: hermes-agent
-command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty - no errors)
-outputs:
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-probability-bar.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-dotscore-vs-prob.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-random-vs-trained.png
-  - Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
-notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
-colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/skipgram-softmax.ipynb
-note: Script ran without errors. Two parts: (A) random init shows uniform probs ~0.125, (B) hand-designed trained vectors show semantic clustering. 3 plots generated with English labels (CJK font unavailable in headless env). All images uploaded to obsidian-image host. Notebook has 14 cells with full Chinese teaching content.
-
-## run_id 20260610T094123Z__t_2397e6e3__one-hot-vs-dense
-
-task_id: t_2397e6e3
-capsule_slug: one-hot-vs-dense
-timestamp: 2026-06-10T09:41:23Z
-hostname: 0d61b5cf12fa
-environment: Hermes container (.venv/bin/python, matplotlib+numpy available)
-command: .venv/bin/python Labs/L01-word-vectors/one-hot-vs-dense.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt (empty — no errors)
-outputs:
-  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
-  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.json
-  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-heatmap.png
-  - Labs/L01-word-vectors/outputs/one-hot-vs-dense-bar-comparison.png
-notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
-colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/Labs/L01-word-vectors/one-hot-vs-dense.ipynb
-notes: Script ran cleanly with exit code 0. matplotlib charts generated without font warnings (CJK chars moved to English labels in chart; Chinese explanation in notebook/markdown). Toy dense vectors designed with 4 semantic dimensions (lodging/finance/food/entity) producing clear same-group (avg cos_sim=0.9979) vs cross-group (avg cos_sim=0.0899) separation. Gap = 0.9079.
-
-## run_id 20260610T094147Z__t_4443cc6a__co-occurrence-matrix
-
-task_id: t_4443cc6a
-capsule_slug: co-occurrence-matrix
-timestamp: 2026-06-10T09:41:47Z
-hostname: 0d61b5cf12fa
-command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
-exit_code: 0
-stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
-stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty, no warnings)
-outputs:
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d.png
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d-window2.png
-  - Labs/L01-word-vectors/outputs/co-occurrence-matrix-summary.json
-notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
-notes: Clean run, exit 0, no stderr. Corpus 6 sentences V=22. Two plots generated (window=1, window=2). Both uploaded to image host. Pushed to GitHub for Colab.
+note: first run, exit 0, no errors; toy 50-dim embeddings with seed=42; analogy man:woman::king:? correctly predicts queen (cos=1.0); all outputs generated
