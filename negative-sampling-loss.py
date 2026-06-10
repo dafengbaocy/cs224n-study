@@ -1,199 +1,328 @@
 #!/usr/bin/env python3
 """
-CS224N L01 Word Vectors - Code Capsule: negative-sampling-loss (WP05)
-Concept: Negative Sampling (SGNS) vs Full Softmax
-Anchor: Notes 3.5 (Eq.14-15); R02 paper Section 3
+Negative Sampling Loss vs Full Softmax — CS224N L01 WP05
+
+Concept: Notes §3.5 (Eq.14-15, SGNS objective); R02 paper Section 3
+Why code is needed: Notes gives the SGNS formula but doesn't explain WHY
+the logistic approximation works. We need to actually compare the two
+loss functions' computation cost, gradient behavior, and how k affects results.
+
+Pure stdlib for core computation (Colab-ready). matplotlib only for plots.
 """
-import math, random, json, os, copy
+import math
+import json
+import os
+import random
 
-random.seed(42)
-VOCAB = ["bank","river","money","loan","stock","market","cat","dog","car","book"]
-VS = len(VOCAB); D = 4
-w2i = {w:i for i,w in enumerate(VOCAB)}
-i2w = {i:w for w,i in w2i.items()}
+# ============================================================
+# 1. Setup: small toy vocabulary (consistent with skipgram-softmax capsule)
+# ============================================================
 
-def mkvec(vs, d, s=42):
-    random.seed(s)
-    return [[random.gauss(0,0.1) for _ in range(d)] for _ in range(vs)]
+VOCAB = ["banking", "money", "crisis", "turning", "problems", "into"]
+DIM = 3
+SEED_V = 42
+SEED_U = 99
 
-V = mkvec(VS, D, 42); U = mkvec(VS, D, 99)
+def make_vectors(vocab, dim, seed):
+    """Deterministic toy vectors for reproducibility."""
+    vectors = {}
+    for i, word in enumerate(vocab):
+        vec = [round(math.sin(seed * (i + 1) * 7.3 + (d + 1) * 13.7) * 2.0, 4)
+               for d in range(dim)]
+        vectors[word] = vec
+    return vectors
 
-def dot(a,b): return sum(x*y for x,y in zip(a,b))
-def sig(x):
-    if x>=0: return 1.0/(1.0+math.exp(-x))
-    e=math.exp(x); return e/(1.0+e)
-def sfx(scores):
-    m=max(scores); e=[math.exp(s-m) for s in scores]; t=sum(e); return [x/t for x in e]
-def vsub(a,b): return [x-y for x,y in zip(a,b)]
-def vadd(a,b): return [x+y for x,y in zip(a,b)]
-def vscl(a,c): return [x*c for x in a]
-def vnorm(a): return math.sqrt(sum(x*x for x in a))
-def cosim(a,b):
-    na,nb=vnorm(a),vnorm(b)
-    return dot(a,b)/(na*nb) if na and nb else 0.0
+def dot(a, b):
+    return sum(ai * bi for ai, bi in zip(a, b))
 
-cw="bank"; pw="river"; ci=w2i[cw]; pi=w2i[pw]
-K=5
-negs=random.sample([i for i in range(VS) if i!=pi], K)
-nw=[i2w[i] for i in negs]
+def sigmoid(x):
+    """Numerically stable sigmoid."""
+    if x >= 0:
+        return 1.0 / (1.0 + math.exp(-x))
+    else:
+        ez = math.exp(x)
+        return ez / (1.0 + ez)
 
-print("="*70)
-print("CS224N L01 Code Capsule: Negative Sampling Loss vs Full Softmax")
-print("="*70)
-print(f"\nVocabulary |V|={VS}, dim d={D}")
-print(f"Center: {cw} (idx={ci}), Positive: {pw} (idx={pi})")
-print(f"Negatives k={K}: {nw} (indices={negs})\n")
+# ============================================================
+# 2. Full Softmax Loss (Eq.14 from Notes)
+# ============================================================
 
-print("-"*70)
-print("[Part A] Full Softmax Loss (Notes 3.2 Eq.4-5)")
-print("-"*70+"\n")
-vc=V[ci]
-scores=[dot(vc,U[j]) for j in range(VS)]
-probs=sfx(scores)
-L_sm=-math.log(probs[pi])
+def softmax_loss(U, V, center, output, vocab):
+    """
+    Full softmax cross-entropy loss:
+    J_softmax = -log( exp(u_o^T v_c) / sum_w exp(u_w^T v_c) )
+              = -u_o^T v_c + log( sum_w exp(u_w^T v_c) )
+    """
+    vc = V[center]
+    uo = U[output]
+    scores = {}
+    for w in vocab:
+        scores[w] = dot(U[w], vc)
+    max_score = max(scores.values())
+    log_sum_exp = max_score + math.log(sum(math.exp(s - max_score) for s in scores.values()))
+    loss = -dot(uo, vc) + log_sum_exp
+    total_exp = sum(math.exp(s) for s in scores.values())
+    probs = {w: math.exp(scores[w]) / total_exp for w in vocab}
+    grad_vc = [0.0] * DIM
+    for d in range(DIM):
+        for w in vocab:
+            grad_vc[d] += probs[w] * U[w][d]
+        grad_vc[d] -= uo[d]
+    n_dot_products = len(vocab)
+    return loss, probs, grad_vc, n_dot_products
 
-print(f"{'Word':<10}{'Score':>12}{'P(w|c)':>12}  Label")
-print("-"*50)
-for j in range(VS):
-    lb=""
-    if j==pi: lb="<- positive"
-    elif i2w[j] in nw: lb="<- negative"
-    print(f"{i2w[j]:<10}{scores[j]:>12.6f}{probs[j]:>12.6f}  {lb}")
-print(f"\nFull Softmax loss = -log P({pw}|{cw}) = -log({probs[pi]:.6f}) = {L_sm:.6f}")
-print(f"Cost: O(|V|) = O({VS})\n")
+# ============================================================
+# 3. Negative Sampling Loss (Eq.15 from Notes / R02 Section 3)
+# ============================================================
 
-print("-"*70)
-print("[Part B] Negative Sampling Loss (Notes 3.5 Eq.15)")
-print("-"*70+"\n")
-sp=dot(vc,U[pi]); Lp=-math.log(sig(sp))
-nscores=[dot(vc,U[k]) for k in negs]
-Lnt=[-math.log(sig(-s)) for s in nscores]
-Ln=sum(Lnt); Lsgns=Lp+Ln
+def negative_sampling_loss(U, V, center, output, vocab, k, rng):
+    """
+    Negative sampling loss (SGNS):
+    J_NS = -log(sigmoid(u_o^T v_c)) - sum_{i=1}^{k} E_{w~P(w)}[log(sigmoid(-u_w^T v_c))]
+    """
+    vc = V[center]
+    uo = U[output]
+    pos_score = dot(uo, vc)
+    pos_loss = -math.log(sigmoid(pos_score) + 1e-10)
+    candidates = [w for w in vocab if w != output]
+    neg_words = [rng.choice(candidates) for _ in range(k)]
+    neg_loss = 0.0
+    neg_grad_vc = [0.0] * DIM
+    for nw in neg_words:
+        unw = U[nw]
+        neg_score = dot(unw, vc)
+        sig_neg = sigmoid(-neg_score)
+        neg_loss += -math.log(sig_neg + 1e-10)
+        sig_pos = sigmoid(neg_score)
+        for d in range(DIM):
+            neg_grad_vc[d] += sig_pos * unw[d]
+    total_loss = pos_loss + neg_loss
+    sig_pos_score = sigmoid(pos_score)
+    grad_vc = [0.0] * DIM
+    for d in range(DIM):
+        grad_vc[d] = -(1.0 - sig_pos_score) * uo[d] + neg_grad_vc[d]
+    n_dot_products = 1 + k
+    return total_loss, neg_words, grad_vc, n_dot_products, pos_loss, neg_loss
 
-print(f"Positive: -log sigma({sp:.6f}) = {Lp:.6f}\n")
-print(f"{'Neg':<10}{'u^Tv':>10}{'sigma(-u^Tv)':>14}{'-log sig':>12}")
-print("-"*48)
-for ki,s in zip(negs,nscores):
-    print(f"{i2w[ki]:<10}{s:>10.6f}{sig(-s):>14.6f}{-math.log(sig(-s)):>12.6f}")
-print(f"{'Sum':<10}{'':>10}{'':>14}{Ln:>12.6f}")
-print(f"\nSGNS loss = {Lp:.6f} + {Ln:.6f} = {Lsgns:.6f}")
-print(f"Cost: O(k) = O({K+1})\n")
+# ============================================================
+# 4. Comparison experiments
+# ============================================================
 
-print("-"*70)
-print("[Part C] Loss Comparison")
-print("-"*70+"\n")
-print(f"{'Method':<20}{'Loss':>12}{'Terms':>8}  Complexity")
-print("-"*55)
-print(f"{'Full Softmax':<20}{L_sm:>12.6f}{VS:>8}  O(|V|)=O({VS})")
-print(f"{'Neg. Sampling':<20}{Lsgns:>12.6f}{K+1:>8}  O(k)=O({K+1})")
-print(f"\nSpeedup: |V|/k = {VS/K:.1f}x; at |V|=100k: 20,000x\n")
+def run_comparison():
+    rng = random.Random(2024)
+    V = make_vectors(VOCAB, DIM, SEED_V)
+    U = make_vectors(VOCAB, DIM, SEED_U)
+    center = "banking"
+    output = "money"
 
-print("-"*70)
-print("[Part D] Gradient Analysis")
-print("-"*70+"\n")
-eu=[0.0]*D
-for j in range(VS):
-    for d in range(D): eu[d]+=probs[j]*U[j][d]
-g_sm=vsub(eu,U[pi])
-sp_sig=sig(sp)
-g_sg=vscl(U[pi],sp_sig-1.0)
-for i in range(K):
-    g_sg=vadd(g_sg,vscl(U[negs[i]],sig(-nscores[i])))
+    print("=" * 60)
+    print("Negative Sampling Loss vs Full Softmax — CS224N L01 WP05")
+    print("=" * 60)
+    print()
+    print(f"Vocabulary: {VOCAB}")
+    print(f"|V| = {len(VOCAB)}, d = {DIM}")
+    print(f"Center word c = '{center}', Output word o = '{output}'")
+    print()
 
-print(f"Full Softmax grad: [{', '.join(f'{g:.6f}' for g in g_sm)}]  norm={vnorm(g_sm):.6f}")
-print(f"  touches {VS} outside vectors (ALL)\n")
-print(f"SGNS grad: [{', '.join(f'{g:.6f}' for g in g_sg)}]  norm={vnorm(g_sg):.6f}")
-print(f"  touches {K+1} outside vectors\n")
-u_sm=vscl(g_sm,-1); u_sg=vscl(g_sg,-1)
-print(f"Update (-grad):")
-print(f"  Softmax: [{', '.join(f'{g:.6f}' for g in u_sm)}]")
-print(f"  SGNS:    [{', '.join(f'{g:.6f}' for g in u_sg)}]\n")
+    print("-- Center vectors V --")
+    for w in VOCAB:
+        print(f"  v_{w} = {V[w]}")
+    print("-- Context vectors U --")
+    for w in VOCAB:
+        print(f"  u_{w} = {U[w]}")
+    print()
 
-print("-"*70)
-print("[Part E] Training: Pull Positive, Push Negatives")
-print("-"*70+"\n")
-Vt=copy.deepcopy(V); Ut=copy.deepcopy(U)
-lr=0.05; N=100
-hist={"step":[],"pos":[],"neg":[]}
-for step in range(N+1):
-    pc=cosim(Vt[ci],Ut[pi])
-    nc=[cosim(Vt[ci],Ut[k]) for k in negs]
-    an=sum(nc)/len(nc)
-    if step%20==0 or step==N:
-        hist["step"].append(step); hist["pos"].append(round(pc,4)); hist["neg"].append(round(an,4))
-    if step==N: break
-    vcs=list(Vt[ci])
-    sp_d=dot(vcs,Ut[pi]); sg_p=sig(sp_d)
-    Ut[pi]=vsub(Ut[pi],vscl(vcs,sg_p-1.0,lr) if False else vscl(vscl(vcs,sg_p-1.0),lr))
-    for ki in negs:
-        sk=dot(vcs,Ut[ki]); sg_k=sig(sk)
-        Ut[ki]=vsub(Ut[ki],vscl(vscl(vcs,1.0-sg_k),lr))
+    # --- Full Softmax ---
+    print("=" * 60)
+    print("PART 1: Full Softmax Loss (Notes Eq.14)")
+    print("=" * 60)
+    print()
+    print(f"Formula: J = -u_o^T v_c + log(sum_w exp(u_w^T v_c))")
+    print(f"Must compute scores for ALL |V| = {len(VOCAB)} words")
+    print()
 
-fpc=cosim(Vt[ci],Ut[pi])
-fnc=[cosim(Vt[ci],Ut[k]) for k in negs]
-fan=sum(fnc)/len(fnc)
-print(f"Config: lr={lr}, steps={N}, k={K}\n")
-print(f"{'Step':<8}{'cos(pos)':<16}{'avg cos(neg)'}")
-print("-"*40)
-for i in range(len(hist["step"])):
-    print(f"{hist['step'][i]:<8}{hist['pos'][i]:<16.4f}{hist['neg'][i]:.4f}")
-pd="UP (closer)" if fpc>hist["pos"][0] else "DOWN"
-nd="DOWN (apart)" if fan<hist["neg"][0] else "UP"
-print(f"\nPositive cos: {hist['pos'][0]:.4f} -> {fpc:.4f} ({pd})")
-print(f"Negative avg cos: {hist['neg'][0]:.4f} -> {fan:.4f} ({nd})")
+    sm_loss, sm_probs, sm_grad, sm_dots = softmax_loss(U, V, center, output, VOCAB)
 
-odir=os.path.join(os.path.dirname(os.path.abspath(__file__)),"outputs")
-os.makedirs(odir,exist_ok=True)
-res={"vocab_size":VS,"embedding_dim":D,"center_word":cw,"positive_word":pw,
-     "negative_words":nw,"negative_k":K,
-     "full_softmax":{"loss":round(L_sm,6),"positive_prob":round(probs[pi],6),
-                     "terms":VS,"complexity":f"O(|V|)=O({VS})"},
-     "negative_sampling":{"loss":round(Lsgns,6),"positive_loss":round(Lp,6),
-                          "negative_loss":round(Ln,6),"positive_sigmoid":round(sig(sp),6),
-                          "terms":K+1,"complexity":f"O(k)=O({K+1})"},
-     "training":{"lr":lr,"steps":N,"init_pos_cos":hist["pos"][0],
-                 "final_pos_cos":round(fpc,4),"init_neg_cos":hist["neg"][0],
-                 "final_neg_cos":round(fan,4),"history":hist}}
-jp=os.path.join(odir,"negative-sampling-loss-results.json")
-with open(jp,"w") as f: json.dump(res,f,indent=2,ensure_ascii=False)
-print(f"\nSaved: {jp}")
+    print(f"Dot products u_w^T v_{center}:")
+    for w in VOCAB:
+        s = dot(U[w], V[center])
+        marker = " <-- output word" if w == output else ""
+        print(f"  u_{w}^T v_{center} = {s:.4f}{marker}")
+    print()
 
-try:
-    import matplotlib; matplotlib.use('Agg')
-    import matplotlib.pyplot as plt; import numpy as np
-    fig,axes=plt.subplots(1,3,figsize=(18,5))
-    fig.suptitle('Negative Sampling vs Full Softmax (CS224N L01 WP05)',fontsize=14,fontweight='bold')
-    cols=['#e74c3c' if j==pi else '#3498db' if i2w[j] in nw else '#95a5a6' for j in range(VS)]
-    axes[0].bar(range(VS),probs,color=cols)
-    axes[0].set_xticks(range(VS)); axes[0].set_xticklabels(VOCAB,rotation=45,ha='right',fontsize=8)
-    axes[0].set_ylabel('P(w|c)'); axes[0].set_title('Full Softmax probabilities')
-    axes[0].axhline(1/VS,color='k',ls='--',alpha=.5)
-    cats=['Full SM','SGNS pos','SGNS neg','SGNS total']
-    vals=[L_sm,Lp,Ln,Lsgns]; bcols=['#e74c3c','#2ecc71','#3498db','#9b59b6']
-    bars=axes[1].bar(cats,vals,color=bcols)
-    axes[1].set_ylabel('Loss'); axes[1].set_title('Loss Comparison')
-    for b,v in zip(bars,vals): axes[1].text(b.get_x()+b.get_width()/2,v+.02,f'{v:.3f}',ha='center',fontsize=9)
-    axes[2].plot(hist["step"],hist["pos"],'o-',color='#e74c3c',label='cos(pos)',lw=2)
-    axes[2].plot(hist["step"],hist["neg"],'s-',color='#3498db',label='avg cos(neg)',lw=2)
-    axes[2].set_xlabel('Step'); axes[2].set_ylabel('Cosine'); axes[2].set_title('Training dynamics')
-    axes[2].legend(); axes[2].grid(True,alpha=.3)
-    plt.tight_layout()
-    fp=os.path.join(odir,"negative-sampling-loss-comparison.png")
-    plt.savefig(fp,dpi=150,bbox_inches='tight'); plt.close()
-    print(f"Plot: {fp}")
-    fig2,(a4,a5)=plt.subplots(1,2,figsize=(12,5))
-    fig2.suptitle('Gradient: Softmax vs SGNS',fontsize=13,fontweight='bold')
-    x=np.arange(D); w=.35; dims=[f'd{i}' for i in range(D)]
-    a4.bar(x-w/2,g_sm,w,label='Softmax',color='#e74c3c',alpha=.8)
-    a4.bar(x+w/2,g_sg,w,label='SGNS',color='#3498db',alpha=.8)
-    a4.set_xticks(x); a4.set_xticklabels(dims); a4.set_ylabel('Gradient'); a4.legend(); a4.grid(True,alpha=.3,axis='y')
-    a5.bar(x-w/2,u_sm,w,label='Softmax',color='#e74c3c',alpha=.8)
-    a5.bar(x+w/2,u_sg,w,label='SGNS',color='#3498db',alpha=.8)
-    a5.set_xticks(x); a5.set_xticklabels(dims); a5.set_ylabel('Update (-grad)'); a5.legend(); a5.grid(True,alpha=.3,axis='y')
-    plt.tight_layout()
-    fp2=os.path.join(odir,"negative-sampling-loss-gradient.png")
-    plt.savefig(fp2,dpi=150,bbox_inches='tight'); plt.close()
-    print(f"Gradient plot: {fp2}")
-except ImportError as e:
-    print(f"[WARN] no matplotlib: {e}")
-print("\nDONE")
+    print(f"P(w|'{center}') under softmax:")
+    for w in VOCAB:
+        bar = "#" * int(sm_probs[w] * 40)
+        marker = " <-- output" if w == output else ""
+        print(f"  P({w:>10}|{center}) = {sm_probs[w]:.6f}  {bar}{marker}")
+    print()
+
+    print(f"Softmax loss = {sm_loss:.6f}")
+    print(f"  = -log(P('{output}'|'{center}')) = -log({sm_probs[output]:.6f}) = {-math.log(sm_probs[output]):.6f}")
+    print(f"Dot products needed: {sm_dots} (= |V|)")
+    print(f"Gradient dJ/dv_c = [{', '.join(f'{g:.4f}' for g in sm_grad)}]")
+    print()
+
+    # --- Negative Sampling ---
+    print("=" * 60)
+    print("PART 2: Negative Sampling Loss (Notes Eq.15 / R02 Section 3)")
+    print("=" * 60)
+    print()
+    print(f"Formula: J = -log(sigmoid(u_o^T v_c)) - sum_i log(sigmoid(-u_wi^T v_c))")
+    print(f"Only needs k+1 dot products instead of |V|")
+    print()
+
+    for k in [2, 5, 10]:
+        rng_k = random.Random(2024)
+        ns_loss, neg_words, ns_grad, ns_dots, pos_l, neg_l = \
+            negative_sampling_loss(U, V, center, output, VOCAB, k, rng_k)
+        print(f"--- k = {k} ---")
+        print(f"  Positive pair: ({center}, {output})")
+        print(f"  Negative samples: {neg_words}")
+        print(f"  Positive loss: -log(sigmoid(u_o^T v_c)) = {pos_l:.6f}")
+        print(f"  Negative loss: sum -log(sigmoid(-u_w^T v_c)) = {neg_l:.6f}")
+        print(f"  Total NS loss = {ns_loss:.6f}")
+        print(f"  Dot products needed: {ns_dots} (= 1 + k)")
+        print(f"  Gradient dJ/dv_c = [{', '.join(f'{g:.4f}' for g in ns_grad)}]")
+        print()
+
+    # --- Detailed k=5 comparison ---
+    print("=" * 60)
+    print("PART 3: Detailed Comparison (k=5)")
+    print("=" * 60)
+    print()
+
+    rng5 = random.Random(2024)
+    ns_loss_5, neg_words_5, ns_grad_5, ns_dots_5, pos_l_5, neg_l_5 = \
+        negative_sampling_loss(U, V, center, output, VOCAB, 5, rng5)
+
+    print(f"{'Metric':<35} {'Softmax':>12} {'NS (k=5)':>12}")
+    print(f"{'-'*35} {'-'*12} {'-'*12}")
+    print(f"{'Loss':<35} {sm_loss:>12.6f} {ns_loss_5:>12.6f}")
+    print(f"{'Dot products':<35} {sm_dots:>12} {ns_dots_5:>12}")
+    print(f"{'Computation ratio (NS/Softmax)':<35} {'':>12} {ns_dots_5/sm_dots:>11.0%}")
+    print()
+
+    sm_grad_norm = math.sqrt(sum(g**2 for g in sm_grad))
+    ns_grad_norm = math.sqrt(sum(g**2 for g in ns_grad_5))
+    print(f"{'Gradient ||dJ/dv_c||':<35} {sm_grad_norm:>12.6f} {ns_grad_norm:>12.6f}")
+    print()
+
+    dot_grad = sum(a * b for a, b in zip(sm_grad, ns_grad_5))
+    if sm_grad_norm > 0 and ns_grad_norm > 0:
+        grad_cos = dot_grad / (sm_grad_norm * ns_grad_norm)
+    else:
+        grad_cos = 0.0
+    print(f"{'Gradient cosine similarity':<35} {grad_cos:>12.6f}")
+    print()
+
+    # --- Effect of k ---
+    print("=" * 60)
+    print("PART 4: Effect of k on Loss and Computation")
+    print("=" * 60)
+    print()
+
+    k_values = [1, 2, 5, 10, 20, 50]
+    results_k = []
+    for k in k_values:
+        rng_k = random.Random(2024)
+        ns_l, nw, ns_g, ns_d, pos_l_k, neg_l_k = \
+            negative_sampling_loss(U, V, center, output, VOCAB, k, rng_k)
+        ns_g_norm = math.sqrt(sum(g**2 for g in ns_g))
+        results_k.append({
+            "k": k,
+            "loss": round(ns_l, 6),
+            "pos_loss": round(pos_l_k, 6),
+            "neg_loss": round(neg_l_k, 6),
+            "dot_products": ns_d,
+            "grad_norm": round(ns_g_norm, 6),
+            "neg_words": nw
+        })
+        print(f"  k={k:>3}: loss={ns_l:.6f}  dots={ns_d:>3}  grad_norm={ns_g_norm:.6f}  neg={nw}")
+
+    print()
+    print(f"  Softmax loss (reference): {sm_loss:.6f}")
+    print(f"  Softmax dots (reference): {sm_dots}")
+    print()
+
+    # --- Why logistic approximation works ---
+    print("=" * 60)
+    print("PART 5: Why Logistic Approximation Works")
+    print("=" * 60)
+    print()
+    print("Key insight: Negative sampling reframes word prediction as")
+    print("BINARY CLASSIFICATION — 'is this a real (context, center) pair?'")
+    print()
+    print("  Positive pair (c, o):    maximize log(sigmoid(u_o^T v_c))")
+    print("    -> push sigmoid(u_o^T v_c) toward 1.0")
+    print()
+    pos_sig = sigmoid(dot(U[output], V[center]))
+    print(f"    Current: sigmoid(u_{output}^T v_{center}) = sigmoid({dot(U[output], V[center]):.4f}) = {pos_sig:.6f}")
+    print()
+    print("  Negative pair (c, w_i):  maximize log(sigmoid(-u_wi^T v_c))")
+    print("    -> push sigmoid(u_wi^T v_c) toward 0.0")
+    print()
+    for nw in neg_words_5:
+        neg_sig = sigmoid(dot(U[nw], V[center]))
+        print(f"    sigmoid(u_{nw}^T v_{center}) = sigmoid({dot(U[nw], V[center]):.4f}) = {neg_sig:.6f}")
+    print()
+    print("This is a NOISE CONTRASTIVE ESTIMATION (NCE) approximation:")
+    print("  Instead of normalizing over ALL |V| words (expensive),")
+    print("  we just learn to distinguish the true pair from k noise samples.")
+    print()
+
+    # --- Real-world scaling ---
+    print("=" * 60)
+    print("PART 6: Real-world Scaling")
+    print("=" * 60)
+    print()
+    real_V_sizes = [1000, 10000, 50000, 100000]
+    print(f"{'|V|':>10} {'Softmax dots':>15} {'NS dots (k=5)':>15} {'Speedup':>10}")
+    print(f"{'-'*10} {'-'*15} {'-'*15} {'-'*10}")
+    for vs in real_V_sizes:
+        speedup = vs / 6.0
+        print(f"{vs:>10,} {vs:>15,} {6:>15} {speedup:>9,.0f}x")
+    print()
+    print(f"With |V|=100,000 and k=5: softmax needs 100,000 dots, NS needs only 6.")
+    print(f"That's a {100000//6:,}x speedup per training step!")
+    print()
+
+    # --- Save structured output ---
+    output_data = {
+        "vocab": VOCAB,
+        "dim": DIM,
+        "center": center,
+        "output": output,
+        "softmax": {
+            "loss": round(sm_loss, 6),
+            "probs": {w: round(p, 6) for w, p in sm_probs.items()},
+            "grad": [round(g, 6) for g in sm_grad],
+            "dot_products": sm_dots
+        },
+        "negative_sampling_k5": {
+            "loss": round(ns_loss_5, 6),
+            "pos_loss": round(pos_l_5, 6),
+            "neg_loss": round(neg_l_5, 6),
+            "neg_words": neg_words_5,
+            "grad": [round(g, 6) for g in ns_grad_5],
+            "dot_products": ns_dots_5,
+            "grad_cosine_vs_softmax": round(grad_cos, 6)
+        },
+        "k_sweep": results_k,
+        "gradient_comparison": {
+            "softmax_grad_norm": round(sm_grad_norm, 6),
+            "ns_k5_grad_norm": round(ns_grad_norm, 6),
+            "cosine_similarity": round(grad_cos, 6)
+        }
+    }
+
+    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, "negative-sampling-loss-output.json")
+    with open(out_path, "w") as f:
+        json.dump(output_data, f, indent=2)
+    print(f"Structured output saved: {out_path}")
+    return output_data
+
+if __name__ == "__main__":
+    run_comparison()
