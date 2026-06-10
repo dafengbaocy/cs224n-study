@@ -4,22 +4,20 @@
     "hotel",
     "motel",
     "book",
-    "Seattle",
-    "Seattle_motel"
+    "cat",
+    "dog",
+    "fish"
   ],
-  "vocab_size": 5,
-  "embed_dim": 3,
-  "one_hot_cosine": {
-    "hotel_motel": 0.0,
-    "hotel_book": 0.0,
-    "hotel_Seattle": 0.0,
-    "motel_book": 0.0
+  "vocab_size": 6,
+  "one_hot_dot_products": {
+    "hotel-motel": 0.0,
+    "cat-dog": 0.0,
+    "book-fish": 0.0
   },
-  "dense_cosine": {
-    "hotel_motel": 0.9865970698452157,
-    "hotel_book": 0.27129470652201143,
-    "hotel_Seattle": 0.4337619519676258,
-    "motel_book": 0.3659761266023688
+  "dense_cosine_similarities": {
+    "hotel-motel": 0.9949,
+    "cat-dog": 0.943,
+    "book-fish": -0.3162
   },
-  "key_finding": "All one-hot pairwise cosine similarities are 0.0; dense vectors encode meaningful similarity."
+  "key_finding": "All one-hot dot products are 0.0 (orthogonal); dense cosine similarities reflect semantic relatedness."
 }
