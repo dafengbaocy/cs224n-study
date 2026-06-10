@@ -3,7 +3,7 @@
 > [!info] 这个 Capsule 在看什么
 > **概念**：[[Lectures/L01-word-vectors/00-concept-glossary#one-hot-encoding|one-hot encoding]] 让每个词成为正交基向量，所有不同词的点积都是 0，无法编码相似度；[[Lectures/L01-word-vectors/00-concept-glossary#dense-vector|dense vector]] 把词映射到低维连续空间，语义相近的词方向接近，可以用[[Lectures/L01-word-vectors/00-concept-glossary#cosine-similarity|余弦相似度]]衡量。
 >
-> **为什么不能只靠文字**：Slides p19-22 展示了 one-hot 和 dense 的概念，但只有亲手算[[Lectures/L01-word-vectors/00-concept-glossary#dot-product|点积]]、看数字，才能真正理解为什么 one-hot 的 hotel·motel = book·fish = 0——这个「所有词等距」的问题有多致命。
+> **为什么不能只靠文字**：Slides p19-22 展示了 one-hot 和 dense 的概念，但只有亲手算点积、看数字，才能真正理解为什么 one-hot 的 hotel·motel = book·fish = 0——这个「所有词等距」的问题有多致命。
 >
 > **官方锚点**：Slides p19-p22; Notes §2.2 Eq.1-2
 
@@ -20,7 +20,7 @@ cd /workspace/cs224n-study
 ### 这段代码在做什么
 
 1. 用 6 个词（hotel, motel, book, cat, dog, fish）构建 [[Lectures/L01-word-vectors/00-concept-glossary#one-hot-encoding|one-hot]] 向量
-2. 计算 one-hot [[Lectures/L01-word-vectors/00-concept-glossary#dot-product|点积]]——所有不同词对都是 0
+2. 计算 one-hot 点积——所有不同词对都是 0
 3. 构建 toy [[Lectures/L01-word-vectors/00-concept-glossary#dense-vector|dense vector]]（2 维，模拟训练后结果）
 4. 计算 dense 余弦相似度——近义词 hotel-motel = 0.9949，无关词 book-fish = -0.3162
 
@@ -61,7 +61,11 @@ cd /workspace/cs224n-study
 
 ### 对比图
 
+<<<<<<< Updated upstream
 ![One-hot vs Dense 对比图](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-181637.png)
+=======
+![One-hot vs Dense 对比图](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-181656.png)
+>>>>>>> Stashed changes
 
 > [!tip] 读图指南
 > - **左图**（One-hot）：三组词对的点积全是 0（蓝色柱），无论它们是近义词还是无关词。
@@ -90,7 +94,7 @@ cd /workspace/cs224n-study
 
 ```yaml
 numeric_provenance:
-  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T102535Z__t_a1b9e9f6__one-hot-vs-dense
+  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T101634Z__t_a1b9e9f6__one-hot-vs-dense
   stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
   checked_values:
     - claim: "hotel·motel one-hot dot = 0.0"

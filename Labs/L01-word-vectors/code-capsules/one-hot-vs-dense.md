@@ -90,7 +90,7 @@ cd /workspace/cs224n-study
 
 ```yaml
 numeric_provenance:
-  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T102535Z__t_a1b9e9f6__one-hot-vs-dense
+  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T101634Z__t_a1b9e9f6__one-hot-vs-dense
   stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
   checked_values:
     - claim: "hotel·motel one-hot dot = 0.0"
