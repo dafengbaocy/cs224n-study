@@ -1,0 +1,204 @@
+{
+  "vocab": [
+    "banking",
+    "money",
+    "crisis",
+    "turning",
+    "problems",
+    "into"
+  ],
+  "dim": 3,
+  "center": "banking",
+  "output": "money",
+  "softmax": {
+    "loss": 1.390153,
+    "probs": {
+      "banking": 0.540196,
+      "money": 0.249037,
+      "crisis": 0.115551,
+      "turning": 0.054704,
+      "problems": 0.026782,
+      "into": 0.01373
+    },
+    "grad": [
+      -0.031652,
+      0.027083,
+      0.054581
+    ],
+    "dot_products": 6
+  },
+  "negative_sampling_k5": {
+    "loss": 1.702726,
+    "pos_loss": 0.889676,
+    "neg_loss": 0.81305,
+    "neg_words": [
+      "problems",
+      "crisis",
+      "into",
+      "turning",
+      "crisis"
+    ],
+    "grad": [
+      0.284877,
+      -0.104148,
+      -0.373074
+    ],
+    "dot_products": 6,
+    "grad_cosine_vs_softmax": -0.975359
+  },
+  "k_sweep": [
+    {
+      "k": 1,
+      "loss": 0.961974,
+      "pos_loss": 0.889676,
+      "neg_loss": 0.072298,
+      "dot_products": 2,
+      "grad_norm": 1.302805,
+      "neg_words": [
+        "problems"
+      ]
+    },
+    {
+      "k": 2,
+      "loss": 1.242245,
+      "pos_loss": 0.889676,
+      "neg_loss": 0.352569,
+      "dot_products": 3,
+      "grad_norm": 0.7059,
+      "neg_words": [
+        "problems",
+        "crisis"
+      ]
+    },
+    {
+      "k": 5,
+      "loss": 1.702726,
+      "pos_loss": 0.889676,
+      "neg_loss": 0.81305,
+      "dot_products": 6,
+      "grad_norm": 0.480818,
+      "neg_words": [
+        "problems",
+        "crisis",
+        "into",
+        "turning",
+        "crisis"
+      ]
+    },
+    {
+      "k": 10,
+      "loss": 2.307804,
+      "pos_loss": 0.889676,
+      "neg_loss": 1.418128,
+      "dot_products": 11,
+      "grad_norm": 1.815455,
+      "neg_words": [
+        "problems",
+        "crisis",
+        "into",
+        "turning",
+        "crisis",
+        "problems",
+        "turning",
+        "into",
+        "crisis",
+        "problems"
+      ]
+    },
+    {
+      "k": 20,
+      "loss": 4.159915,
+      "pos_loss": 0.889676,
+      "neg_loss": 3.270239,
+      "dot_products": 21,
+      "grad_norm": 5.34455,
+      "neg_words": [
+        "problems",
+        "crisis",
+        "into",
+        "turning",
+        "crisis",
+        "problems",
+        "turning",
+        "into",
+        "crisis",
+        "problems",
+        "turning",
+        "problems",
+        "into",
+        "into",
+        "crisis",
+        "turning",
+        "into",
+        "turning",
+        "into",
+        "banking"
+      ]
+    },
+    {
+      "k": 50,
+      "loss": 12.018401,
+      "pos_loss": 0.889676,
+      "neg_loss": 11.128725,
+      "dot_products": 51,
+      "grad_norm": 20.493864,
+      "neg_words": [
+        "problems",
+        "crisis",
+        "into",
+        "turning",
+        "crisis",
+        "problems",
+        "turning",
+        "into",
+        "crisis",
+        "problems",
+        "turning",
+        "problems",
+        "into",
+        "into",
+        "crisis",
+        "turning",
+        "into",
+        "turning",
+        "into",
+        "banking",
+        "crisis",
+        "problems",
+        "crisis",
+        "into",
+        "crisis",
+        "problems",
+        "banking",
+        "turning",
+        "problems",
+        "problems",
+        "banking",
+        "crisis",
+        "turning",
+        "problems",
+        "turning",
+        "turning",
+        "crisis",
+        "turning",
+        "problems",
+        "problems",
+        "turning",
+        "into",
+        "crisis",
+        "problems",
+        "crisis",
+        "crisis",
+        "banking",
+        "crisis",
+        "banking",
+        "turning"
+      ]
+    }
+  ],
+  "gradient_comparison": {
+    "softmax_grad_norm": 0.068661,
+    "ns_k5_grad_norm": 0.480818,
+    "cosine_similarity": -0.975359
+  }
+}

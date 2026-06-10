@@ -1,0 +1,153 @@
+============================================================
+Negative Sampling Loss vs Full Softmax — CS224N L01 WP05
+============================================================
+
+Vocabulary: ['banking', 'money', 'crisis', 'turning', 'problems', 'into']
+|V| = 6, d = 3
+Center word c = 'banking', Output word o = 'money'
+
+-- Center vectors V --
+  v_banking = [-0.2839, 1.6733, 1.7008]
+  v_money = [-1.9769, -0.5621, 1.5009]
+  v_crisis = [-0.8645, -1.9999, -0.8289]
+  v_turning = [1.4746, -0.5997, -1.9824]
+  v_problems = [1.7212, 1.6515, -0.3227]
+  v_into = [-0.4748, 1.5591, 1.7949]
+-- Context vectors U --
+  u_banking = [1.9086, 1.3495, -0.7659]
+  u_money = [1.9712, 1.1407, -1.0053]
+  u_crisis = [1.9987, 0.9116, -1.2268]
+  u_turning = [1.9905, 0.6662, -1.4264]
+  u_problems = [1.9467, 0.4089, -1.6005]
+  u_into = [1.8683, 0.1443, -1.7461]
+
+============================================================
+PART 1: Full Softmax Loss (Notes Eq.14)
+============================================================
+
+Formula: J = -u_o^T v_c + log(sum_w exp(u_w^T v_c))
+Must compute scores for ALL |V| = 6 words
+
+Dot products u_w^T v_banking:
+  u_banking^T v_banking = 0.4136
+  u_money^T v_banking = -0.3607 <-- output word
+  u_crisis^T v_banking = -1.1286
+  u_turning^T v_banking = -1.8764
+  u_problems^T v_banking = -2.5906
+  u_into^T v_banking = -3.2587
+
+P(w|'banking') under softmax:
+  P(   banking|banking) = 0.540196  #####################
+  P(     money|banking) = 0.249037  ######### <-- output
+  P(    crisis|banking) = 0.115551  ####
+  P(   turning|banking) = 0.054704  ##
+  P(  problems|banking) = 0.026782  #
+  P(      into|banking) = 0.013730  
+
+Softmax loss = 1.390153
+  = -log(P('money'|'banking')) = -log(0.249037) = 1.390153
+Dot products needed: 6 (= |V|)
+Gradient dJ/dv_c = [-0.0317, 0.0271, 0.0546]
+
+============================================================
+PART 2: Negative Sampling Loss (Notes Eq.15 / R02 Section 3)
+============================================================
+
+Formula: J = -log(sigmoid(u_o^T v_c)) - sum_i log(sigmoid(-u_wi^T v_c))
+Only needs k+1 dot products instead of |V|
+
+--- k = 2 ---
+  Positive pair: (banking, money)
+  Negative samples: ['problems', 'crisis']
+  Positive loss: -log(sigmoid(u_o^T v_c)) = 0.889676
+  Negative loss: sum -log(sigmoid(-u_w^T v_c)) = 0.352569
+  Total NS loss = 1.242245
+  Dot products needed: 3 (= 1 + k)
+  Gradient dJ/dv_c = [-0.5372, -0.4208, 0.1808]
+
+--- k = 5 ---
+  Positive pair: (banking, money)
+  Negative samples: ['problems', 'crisis', 'into', 'turning', 'crisis']
+  Positive loss: -log(sigmoid(u_o^T v_c)) = 0.889676
+  Negative loss: sum -log(sigmoid(-u_w^T v_c)) = 0.813050
+  Total NS loss = 1.702726
+  Dot products needed: 6 (= 1 + k)
+  Gradient dJ/dv_c = [0.2849, -0.1041, -0.3731]
+
+--- k = 10 ---
+  Positive pair: (banking, money)
+  Negative samples: ['problems', 'crisis', 'into', 'turning', 'crisis', 'problems', 'turning', 'into', 'crisis', 'problems']
+  Positive loss: -log(sigmoid(u_o^T v_c)) = 0.889676
+  Negative loss: sum -log(sigmoid(-u_w^T v_c)) = 1.418128
+  Total NS loss = 2.307804
+  Dot products needed: 11 (= 1 + k)
+  Gradient dJ/dv_c = [1.3785, 0.2695, -1.1503]
+
+============================================================
+PART 3: Detailed Comparison (k=5)
+============================================================
+
+Metric                                   Softmax     NS (k=5)
+----------------------------------- ------------ ------------
+Loss                                    1.390153     1.702726
+Dot products                                   6            6
+Computation ratio (NS/Softmax)                          100%
+
+Gradient ||dJ/dv_c||                    0.068661     0.480818
+
+Gradient cosine similarity             -0.975359
+
+============================================================
+PART 4: Effect of k on Loss and Computation
+============================================================
+
+  k=  1: loss=0.961974  dots=  2  grad_norm=1.302805  neg=['problems']
+  k=  2: loss=1.242245  dots=  3  grad_norm=0.705900  neg=['problems', 'crisis']
+  k=  5: loss=1.702726  dots=  6  grad_norm=0.480818  neg=['problems', 'crisis', 'into', 'turning', 'crisis']
+  k= 10: loss=2.307804  dots= 11  grad_norm=1.815455  neg=['problems', 'crisis', 'into', 'turning', 'crisis', 'problems', 'turning', 'into', 'crisis', 'problems']
+  k= 20: loss=4.159915  dots= 21  grad_norm=5.344550  neg=['problems', 'crisis', 'into', 'turning', 'crisis', 'problems', 'turning', 'into', 'crisis', 'problems', 'turning', 'problems', 'into', 'into', 'crisis', 'turning', 'into', 'turning', 'into', 'banking']
+  k= 50: loss=12.018401  dots= 51  grad_norm=20.493864  neg=['problems', 'crisis', 'into', 'turning', 'crisis', 'problems', 'turning', 'into', 'crisis', 'problems', 'turning', 'problems', 'into', 'into', 'crisis', 'turning', 'into', 'turning', 'into', 'banking', 'crisis', 'problems', 'crisis', 'into', 'crisis', 'problems', 'banking', 'turning', 'problems', 'problems', 'banking', 'crisis', 'turning', 'problems', 'turning', 'turning', 'crisis', 'turning', 'problems', 'problems', 'turning', 'into', 'crisis', 'problems', 'crisis', 'crisis', 'banking', 'crisis', 'banking', 'turning']
+
+  Softmax loss (reference): 1.390153
+  Softmax dots (reference): 6
+
+============================================================
+PART 5: Why Logistic Approximation Works
+============================================================
+
+Key insight: Negative sampling reframes word prediction as
+BINARY CLASSIFICATION — 'is this a real (context, center) pair?'
+
+  Positive pair (c, o):    maximize log(sigmoid(u_o^T v_c))
+    -> push sigmoid(u_o^T v_c) toward 1.0
+
+    Current: sigmoid(u_money^T v_banking) = sigmoid(-0.3607) = 0.410789
+
+  Negative pair (c, w_i):  maximize log(sigmoid(-u_wi^T v_c))
+    -> push sigmoid(u_wi^T v_c) toward 0.0
+
+    sigmoid(u_problems^T v_banking) = sigmoid(-2.5906) = 0.069747
+    sigmoid(u_crisis^T v_banking) = sigmoid(-1.1286) = 0.244421
+    sigmoid(u_into^T v_banking) = sigmoid(-3.2587) = 0.037015
+    sigmoid(u_turning^T v_banking) = sigmoid(-1.8764) = 0.132806
+    sigmoid(u_crisis^T v_banking) = sigmoid(-1.1286) = 0.244421
+
+This is a NOISE CONTRASTIVE ESTIMATION (NCE) approximation:
+  Instead of normalizing over ALL |V| words (expensive),
+  we just learn to distinguish the true pair from k noise samples.
+
+============================================================
+PART 6: Real-world Scaling
+============================================================
+
+       |V|    Softmax dots   NS dots (k=5)    Speedup
+---------- --------------- --------------- ----------
+     1,000           1,000               6       167x
+    10,000          10,000               6     1,667x
+    50,000          50,000               6     8,333x
+   100,000         100,000               6    16,667x
+
+With |V|=100,000 and k=5: softmax needs 100,000 dots, NS needs only 6.
+That's a 16,666x speedup per training step!
+
+Structured output saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/negative-sampling-loss-output.json

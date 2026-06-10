@@ -1,0 +1,23 @@
+{
+  "capsule": "one-hot-vs-dense",
+  "vocab": [
+    "hotel",
+    "motel",
+    "book",
+    "cat",
+    "dog",
+    "fish"
+  ],
+  "vocab_size": 6,
+  "one_hot_dot_products": {
+    "hotel-motel": 0.0,
+    "cat-dog": 0.0,
+    "book-fish": 0.0
+  },
+  "dense_cosine_similarities": {
+    "hotel-motel": 0.9949,
+    "cat-dog": 0.943,
+    "book-fish": -0.3162
+  },
+  "key_finding": "All one-hot dot products are 0.0 (orthogonal); dense cosine similarities reflect semantic relatedness."
+}
