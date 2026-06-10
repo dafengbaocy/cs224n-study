@@ -126,3 +126,17 @@ stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-output.json, Labs/L01-word-vectors/outputs/co-occurrence-matrix-heatmap.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-cosine-sim.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-window-comparison.png
 notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
 note: pure numpy script, deterministic corpus, no errors. matplotlib plots generated separately via dedicated plot script. All 4 images uploaded to obsidian-image repo via picgo-media MCP. GitHub push failed due to concurrent worker rebase conflicts (colab_link: blocked).
+
+## run_id 20260610T102535Z__t_a1b9e9f6__one-hot-vs-dense
+
+task_id: t_a1b9e9f6
+capsule_slug: one-hot-vs-dense
+timestamp: 2026-06-10T10:25:35Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/one-hot-vs-dense.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt (empty)
+outputs: Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.png, Labs/L01-word-vectors/outputs/one-hot-vs-dense-output.json
+notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
+note: pure stdlib + numpy/matplotlib (pre-installed in venv and Colab). Deterministic toy vectors. No errors. Chart generated via matplotlib Agg backend. Previous run files were lost during git rebase; this is a fresh re-run.
