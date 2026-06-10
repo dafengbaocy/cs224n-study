@@ -27,7 +27,7 @@ $$P(o|c) = \frac{\exp(u_o^\top v_c)}{\sum_{w \in V} \exp(u_w^\top v_c)}$$
 > - 本地：`.venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py`
 > - Colab：点击下方链接直接打开
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](COBAB_LINK_PLACEHOLDER)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/Labs/L01-word-vectors/skipgram-softmax.ipynb)
 
 ```python
 import numpy as np
