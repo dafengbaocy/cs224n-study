@@ -87,13 +87,14 @@ print("=" * 70)
 def word_analogy(a, b, c, vocab_dict):
     """
     类比: a 之于 b 如同 c 之于 ?
-    即: ? = b - a + c
+    即: ? = a - b + c
     
     经典例子: king - man + woman = queen
-    解读: "king 对 man 的关系" 如同 "c 对 ? 的关系"
-    或者更直觉: 从 b 中去掉 a 的特征, 再加上 c 的特征
+    解读: 从 a (king) 中去掉 b (man) 的特征, 再加上 c (woman) 的特征
+    几何上: 向量差 (a-b) 编码了 "a 有但 b 没有" 的语义方向,
+            把这个方向平移到 c 上就得到答案
     """
-    result_vec = vocab_dict[b] - vocab_dict[a] + vocab_dict[c]
+    result_vec = vocab_dict[a] - vocab_dict[b] + vocab_dict[c]
     
     # 在所有词中找最接近 result_vec 的 (排除 a, b, c)
     similarities = []
@@ -118,12 +119,12 @@ for rank, (word, sim) in enumerate(ranked, 1):
 # 更多类比
 print("\n--- 更多类比测试 ---")
 analogies = [
-    ("king", "man", "woman", "queen"),     # 皇室性别转换
+    ("king", "man", "woman", "queen"),     # 皇室性别转换: 去掉男性, 加上女性
     ("prince", "man", "woman", "princess"), # 皇室性别转换 2
-    ("man", "woman", "king", "queen"),      # 反向: man→woman, king→?
-    ("king", "queen", "man", "woman"),      # 反向: king→queen, man→?
-    ("boy", "girl", "man", "woman"),        # 年龄+性别
-    ("boy", "girl", "king", "queen"),       # 年轻→年长
+    ("king", "queen", "man", "woman"),      # 反向: 去掉女性, 加上男性
+    ("king", "queen", "prince", "princess"),# 皇室平行: king-queen 的性别差应用到 prince
+    ("boy", "girl", "man", "woman"),        # 年轻性别差 → 成年: boy 对 girl 如同 man 对 ?
+    ("prince", "princess", "king", "queen"),# 年轻→年长: prince-princess 差应用到 king
 ]
 
 analogy_results = []

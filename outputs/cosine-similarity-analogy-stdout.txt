@@ -38,23 +38,23 @@ Part 2: 词类比算术 (Word Analogy)
 ======================================================================
 
 --- 经典类比: king - man + woman = ? ---
-  结果向量: [-0.82, 0.08, 0.90, 0.88]
+  结果向量: [0.92, 0.02, 0.90, 0.08]
   最接近的词:
-    #1: cat         cos_sim = 0.8186
-    #2: girl        cos_sim = 0.8161
-    #3: dog         cos_sim = 0.5162
-    #4: boy         cos_sim = 0.4666
-    #5: princess    cos_sim = 0.3752
-    #6: prince      cos_sim = 0.1040
-    #7: queen       cos_sim = 0.0638 ← 正确答案!
+    #1: queen       cos_sim = 0.9981 ← 正确答案!
+    #2: princess    cos_sim = 0.8310
+    #3: girl        cos_sim = 0.5520
+    #4: prince      cos_sim = 0.4914
+    #5: cat         cos_sim = 0.4387
+    #6: boy         cos_sim = 0.1104
+    #7: dog         cos_sim = 0.0602
 
 --- 更多类比测试 ---
-  ✗ king - man + woman = cat (expected: queen, sim=0.8186)
-  ✗ prince - man + woman = girl (expected: princess, sim=0.5558)
-  ✓ man - woman + king = queen (expected: queen, sim=0.9981)
-  ✓ king - queen + man = woman (expected: woman, sim=0.9970)
-  ✓ boy - girl + man = woman (expected: woman, sim=0.9994)
-  ✓ boy - girl + king = queen (expected: queen, sim=0.9987)
+  ✓ king - man + woman = queen (expected: queen, sim=0.9981)
+  ✓ prince - man + woman = princess (expected: princess, sim=0.9955)
+  ✗ king - queen + man = boy (expected: woman, sim=0.7646)
+  ✗ king - queen + prince = man (expected: princess, sim=0.8588)
+  ✗ boy - girl + man = dog (expected: woman, sim=0.6981)
+  ✗ prince - princess + king = man (expected: queen, sim=0.7410)
 
 ======================================================================
 Part 3: 类比失败案例 (Analogy Failures)
@@ -62,22 +62,22 @@ Part 3: 类比失败案例 (Analogy Failures)
 
 --- 失败案例 1: 跨语义域的类比 ---
   dog - cat + king = ?
-  结果向量: [0.95, 0.45, 0.45, 0.10]
+  结果向量: [0.95, 1.25, -0.35, 0.10]
   Top-3 预测:
-    queen       cos_sim = 0.9003
-    prince      cos_sim = 0.7631
-    princess    cos_sim = 0.7631
+    prince      cos_sim = 0.7905
+    man         cos_sim = 0.7377
+    boy         cos_sim = 0.5861
   [解读] dog→cat 的关系是 '动物-性别转换'
          迁移到 king 上得到 queen(0.xx), 但 top-1 可能不是 queen
          因为 dog/cat 的向量差异方向和 king/queen 的差异方向不完全一致
 
 --- 失败案例 2: 无对应关系的词 ---
   dog - king + man = ?
-  结果向量: [1.03, 1.33, 0.10, 0.00]
+  结果向量: [-0.87, 0.43, 0.00, 1.00]
   Top-3 预测:
-    prince      cos_sim = 0.7878
-    boy         cos_sim = 0.5614
-    queen       cos_sim = 0.5342
+    boy         cos_sim = 0.7110
+    cat         cos_sim = 0.5971
+    girl        cos_sim = 0.5082
   [解读] 当 a→b 没有清晰语义关系时，类比结果无意义
          最高相似度也较低，说明模型 '不确定'
 
