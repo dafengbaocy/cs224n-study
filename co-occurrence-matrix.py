@@ -10,35 +10,41 @@ Official anchor: Notes §3.1 (co-occurrence matrices); A1 Part 1 Q1.1-1.3
 This script demonstrates:
 1. Building a vocabulary from a toy corpus
 2. Constructing a co-occurrence matrix with a sliding window
-3. Applying Truncated SVD to reduce dimensionality
-4. Visualizing the 2D embeddings
-5. Comparing window size effects (short → syntax, long → semantics)
+3. Applying log normalization (Notes §3.1: "Taking the log... is much more useful")
+4. Applying Truncated SVD to reduce dimensionality
+5. Visualizing the 2D embeddings — showing cluster separation
+6. Comparing window size effects (short → syntax, long → semantics)
 """
 
 import numpy as np
-from collections import Counter, defaultdict
-import json
+from collections import Counter
 import sys
 
 # ============================================================
-# 1. Toy Corpus
+# 1. Toy Corpus — two clear semantic clusters
 # ============================================================
-# A small corpus with clear semantic clusters:
-#   - Finance cluster: banking, money, finance, economy
-#   - Nature cluster: river, lake, forest, mountain
-#   - Common words: the, a, is, in, of, and
+# Finance cluster: banking, money, finance, economy, market, invest
+# Nature cluster:  river, lake, forest, mountain, valley, ocean
+# Function words: the, a, is, in, of, and, to, with
 
 CORPUS = [
+    # Finance sentences (6)
     "the banking system manages money and finance",
     "the economy depends on banking and finance",
     "money flows through the banking system",
-    "the economy and finance are connected",
-    "the river flows through the forest",
+    "the economy and finance are connected to the market",
+    "invest in the banking market and finance",
+    "the market economy depends on money and invest",
+    # Nature sentences (6)
+    "the river flows through the forest and valley",
     "the lake is near the mountain and forest",
-    "a mountain rises above the lake and river",
+    "a mountain rises above the lake and valley",
     "the forest surrounds the lake and river",
-    "the river and lake are in the forest",
-    "a mountain overlooks the river",
+    "the river and lake are in the valley",
+    "a mountain overlooks the river and ocean",
+    # Bridge sentences (2) — share "flows" across clusters
+    "the river flows like money through the economy",
+    "invest in the ocean and the market",
 ]
 
 print("=" * 60)
@@ -83,7 +89,6 @@ def build_cooccurrence(corpus, word2idx, window_size):
         tokens = tokenize(sent)
         for i, center in enumerate(tokens):
             c_idx = word2idx[center]
-            # Look at context within window
             start = max(0, i - window_size)
             end = min(len(tokens), i + window_size + 1)
             for j in range(start, end):
@@ -95,36 +100,55 @@ def build_cooccurrence(corpus, word2idx, window_size):
     
     return cooc
 
-# Build with window=1 (captures syntax: nearby function words)
-print("--- Co-occurrence Matrix (window=1) ---")
-cooc_w1 = build_cooccurrence(CORPUS, word2idx, window_size=1)
+# Build with window=2 (standard for small corpora)
+WINDOW = 2
+print(f"--- Co-occurrence Matrix (window={WINDOW}) ---")
+cooc_raw = build_cooccurrence(CORPUS, word2idx, window_size=WINDOW)
 
-# Print matrix with labels
-print(f"Shape: {cooc_w1.shape}")
+print(f"Shape: {cooc_raw.shape}")
+print(f"Total co-occurrence count: {cooc_raw.sum()}")
+print(f"Nonzero entries: {np.count_nonzero(cooc_raw)}")
 print()
 
-# Print as a readable table
-header = "          " + "".join(f"{w:>10s}" for w in vocab_set[:10])
-if V > 10:
-    header += "".join(f"{w:>10s}" for w in vocab_set[10:])
+# Print compact matrix for content words only
+content_words = [w for w in vocab_set if w not in {'the', 'a', 'is', 'in', 'of', 'and', 'to', 'with'}]
+cw_indices = [word2idx[w] for w in content_words]
+
+print("Co-occurrence sub-matrix (content words only):")
+header = "          " + "".join(f"{w:>10s}" for w in content_words)
 print(header)
-for i, w in enumerate(vocab_set):
-    row = f"{w:>10s}" + "".join(f"{cooc_w1[i,j]:10d}" for j in range(V))
+for i, w in enumerate(content_words):
+    row_vals = [cooc_raw[cw_indices[i], cw_indices[j]] for j in range(len(content_words))]
+    row = f"{w:>10s}" + "".join(f"{v:10d}" for v in row_vals)
     print(row)
 print()
 
-# Show non-zero entries for key content words
-print("Non-zero co-occurrences for content words (window=1):")
-content_words = [w for w in vocab_set if w not in {'the', 'a', 'is', 'in', 'of', 'and'}]
-for w in content_words:
+# Show non-zero co-occurrences for key content words
+print(f"Non-zero co-occurrences for key words (window={WINDOW}, all vocab):")
+key_words = ['banking', 'money', 'finance', 'economy', 'river', 'lake', 'forest', 'mountain']
+for w in key_words:
     idx = word2idx[w]
-    neighbors = [(idx2word[j], cooc_w1[idx, j]) for j in range(V) if cooc_w1[idx, j] > 0]
+    neighbors = [(idx2word[j], cooc_raw[idx, j]) for j in range(V) if cooc_raw[idx, j] > 0]
     neighbors.sort(key=lambda x: -x[1])
     print(f"  {w:>10s}: {neighbors}")
 print()
 
 # ============================================================
-# 4. SVD Dimensionality Reduction
+# 4. Log Normalization (Notes §3.1)
+# ============================================================
+# Notes §3.1: "Taking the log token frequency ends up being much more useful"
+# Standard approach: X_ij = log(1 + X_ij) to dampen high-frequency words
+cooc_log = np.log1p(cooc_raw.astype(float))
+
+print("--- Log Normalization ---")
+print("Before log: max =", cooc_raw.max(), ", mean (nonzero) =", 
+      f"{cooc_raw[cooc_raw > 0].mean():.2f}")
+print("After log:  max =", f"{cooc_log.max():.4f}", ", mean (nonzero) =",
+      f"{cooc_log[cooc_log > 0].mean():.4f}")
+print()
+
+# ============================================================
+# 5. SVD Dimensionality Reduction
 # ============================================================
 def svd_reduce(matrix, k=2):
     """
@@ -132,25 +156,29 @@ def svd_reduce(matrix, k=2):
     Returns reduced matrix of shape (V, k).
     """
     U, S, Vt = np.linalg.svd(matrix, full_matrices=False)
-    # Truncate to k components
     reduced = U[:, :k] * S[:k]  # (V, k)
     return reduced, S
 
 k = 2
-embeddings_w1, singular_values = svd_reduce(cooc_w1.astype(float), k=k)
+embeddings_raw, sv_raw = svd_reduce(cooc_raw.astype(float), k=k)
+embeddings_log, sv_log = svd_reduce(cooc_log, k=k)
 
 print(f"--- SVD Reduction to {k}D ---")
-print(f"Singular values (top 6): {singular_values[:6].round(3)}")
-print(f"Explained variance ratio: {(singular_values[:k]**2 / (singular_values**2).sum() * 100).round(1)}%")
+print(f"Raw co-occurrence singular values (top 6): {sv_raw[:6].round(3)}")
+print(f"  Top-{k} explained variance: {(sv_raw[:k]**2 / (sv_raw**2).sum() * 100).round(1)}%")
+print(f"Log-normalized singular values (top 6): {sv_log[:6].round(3)}")
+print(f"  Top-{k} explained variance: {(sv_log[:k]**2 / (sv_log**2).sum() * 100).round(1)}%")
 print()
 
-print(f"2D Embeddings (window=1):")
-for i, w in enumerate(vocab_set):
-    print(f"  {w:>10s}: [{embeddings_w1[i, 0]:8.4f}, {embeddings_w1[i, 1]:8.4f}]")
+# Use log-normalized embeddings for the main analysis
+print(f"2D Embeddings (log-normalized, window={WINDOW}):")
+for w in content_words:
+    i = word2idx[w]
+    print(f"  {w:>10s}: [{embeddings_log[i, 0]:8.4f}, {embeddings_log[i, 1]:8.4f}]")
 print()
 
 # ============================================================
-# 5. Cosine Similarity
+# 6. Cosine Similarity
 # ============================================================
 def cosine_sim(a, b):
     """Cosine similarity between two vectors."""
@@ -158,107 +186,121 @@ def cosine_sim(a, b):
     norm_b = np.linalg.norm(b)
     if norm_a == 0 or norm_b == 0:
         return 0.0
-    return np.dot(a, b) / (norm_a * norm_b)
+    return float(np.dot(a, b) / (norm_a * norm_b))
 
-print("--- Cosine Similarities (window=1, 2D SVD) ---")
+print("--- Cosine Similarities (log-normalized SVD, 2D) ---")
 pairs = [
-    ("banking", "finance"),
-    ("banking", "money"),
-    ("river", "lake"),
-    ("river", "forest"),
-    ("banking", "river"),     # cross-cluster (should be lower)
-    ("finance", "mountain"),  # cross-cluster (should be lower)
-    ("the", "a"),             # function words
+    ("banking", "finance",   "same cluster (finance)"),
+    ("banking", "money",     "same cluster (finance)"),
+    ("banking", "economy",   "same cluster (finance)"),
+    ("river",   "lake",      "same cluster (nature)"),
+    ("river",   "forest",    "same cluster (nature)"),
+    ("lake",    "valley",    "same cluster (nature)"),
+    ("banking", "river",     "CROSS cluster"),
+    ("finance", "mountain",  "CROSS cluster"),
+    ("money",   "ocean",     "CROSS cluster"),
 ]
-for w1, w2 in pairs:
-    sim = cosine_sim(embeddings_w1[word2idx[w1]], embeddings_w1[word2idx[w2]])
-    print(f"  sim({w1:>10s}, {w2:>10s}) = {sim:.4f}")
+for w1, w2, label in pairs:
+    sim = cosine_sim(embeddings_log[word2idx[w1]], embeddings_log[word2idx[w2]])
+    print(f"  sim({w1:>10s}, {w2:>10s}) = {sim:.4f}  [{label}]")
 print()
 
 # ============================================================
-# 6. Window Size Comparison
+# 7. Window Size Comparison
 # ============================================================
-print("--- Window Size Comparison ---")
-for ws in [1, 2, 3]:
+print("--- Window Size Comparison (log-normalized SVD) ---")
+print(f"  {'Window':>6s}  {'banking-money':>14s}  {'river-lake':>14s}  {'banking-forest':>15s}")
+window_sizes = [1, 2, 3]
+all_sims = {}
+for ws in window_sizes:
     cooc_ws = build_cooccurrence(CORPUS, word2idx, window_size=ws)
-    emb_ws, sv_ws = svd_reduce(cooc_ws.astype(float), k=k)
+    cooc_ws_log = np.log1p(cooc_ws.astype(float))
+    emb_ws, _ = svd_reduce(cooc_ws_log, k=k)
     
-    # Key comparisons
-    sim_bf = cosine_sim(emb_ws[word2idx["banking"]], emb_ws[word2idx["forest"]])
     sim_bm = cosine_sim(emb_ws[word2idx["banking"]], emb_ws[word2idx["money"]])
     sim_rl = cosine_sim(emb_ws[word2idx["river"]], emb_ws[word2idx["lake"]])
+    sim_bf = cosine_sim(emb_ws[word2idx["banking"]], emb_ws[word2idx["forest"]])
+    all_sims[ws] = (sim_bm, sim_rl, sim_bf)
     
-    print(f"  Window={ws}: sim(banking,money)={sim_bm:.4f}  sim(river,lake)={sim_rl:.4f}  sim(banking,forest)={sim_bf:.4f}")
+    print(f"  {ws:>6d}  {sim_bm:>14.4f}  {sim_rl:>14.4f}  {sim_bf:>15.4f}")
 
+print()
+print("Interpretation:")
+print("  - Short window (1): captures syntactic context → words in similar grammatical roles cluster")
+print("  - Medium window (2): balances syntax and semantics → clear cluster separation")
+print("  - Large window (3+): captures topic/semantics → more words share broad topic context")
 print()
 
 # ============================================================
-# 7. Visualization
+# 8. Visualization
 # ============================================================
 import matplotlib
-matplotlib.use('Agg')  # non-interactive backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-# 7a. Co-occurrence matrix heatmap
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+finance_words = ['banking', 'money', 'finance', 'economy', 'market', 'invest']
+nature_words = ['river', 'lake', 'forest', 'mountain', 'valley', 'ocean']
 
-# Heatmap of co-occurrence matrix (window=1)
-im = axes[0].imshow(cooc_w1, cmap='YlOrRd', aspect='auto')
-axes[0].set_title('Co-occurrence Matrix (window=1)', fontsize=12)
-axes[0].set_xticks(range(V))
-axes[0].set_yticks(range(V))
-axes[0].set_xticklabels(vocab_set, rotation=90, fontsize=7)
-axes[0].set_yticklabels(vocab_set, fontsize=7)
+# 8a. Overview: matrix heatmap + 2D scatter + window comparison
+fig, axes = plt.subplots(1, 3, figsize=(20, 6))
+
+# Heatmap of co-occurrence matrix (content words only)
+sub_matrix = cooc_raw[np.ix_(cw_indices, cw_indices)]
+im = axes[0].imshow(sub_matrix, cmap='YlOrRd', aspect='auto')
+axes[0].set_title(f'Co-occurrence Matrix (window={WINDOW}, content words)', fontsize=11)
+axes[0].set_xticks(range(len(content_words)))
+axes[0].set_yticks(range(len(content_words)))
+axes[0].set_xticklabels(content_words, rotation=90, fontsize=8)
+axes[0].set_yticklabels(content_words, fontsize=8)
 plt.colorbar(im, ax=axes[0], fraction=0.046)
 
-# 7b. 2D embedding scatter plot
-for i, w in enumerate(vocab_set):
-    x, y = embeddings_w1[i, 0], embeddings_w1[i, 1]
-    # Color by cluster
-    if w in ['banking', 'money', 'finance', 'economy']:
-        color = '#e74c3c'  # red for finance
-        marker = 'o'
-    elif w in ['river', 'lake', 'forest', 'mountain']:
-        color = '#2ecc71'  # green for nature
-        marker = 's'
+# 2D embedding scatter plot (log-normalized)
+for w in content_words:
+    i = word2idx[w]
+    x, y = embeddings_log[i, 0], embeddings_log[i, 1]
+    if w in finance_words:
+        color, marker = '#e74c3c', 'o'
+    elif w in nature_words:
+        color, marker = '#2ecc71', 's'
     else:
-        color = '#95a5a6'  # gray for function words
-        marker = '^'
-    axes[1].scatter(x, y, c=color, marker=marker, s=80, zorder=5)
-    axes[1].annotate(w, (x, y), fontsize=8, ha='center', va='bottom',
-                     xytext=(0, 5), textcoords='offset points')
+        color, marker = '#f39c12', 'D'
+    axes[1].scatter(x, y, c=color, marker=marker, s=100, zorder=5, edgecolors='black', linewidth=0.5)
+    axes[1].annotate(w, (x, y), fontsize=9, fontweight='bold', ha='center', va='bottom',
+                     xytext=(0, 6), textcoords='offset points')
 
-axes[1].set_title(f'SVD 2D Embeddings (window=1, k={k})', fontsize=12)
-axes[1].set_xlabel(f'Component 1')
-axes[1].set_ylabel(f'Component 2')
+axes[1].set_title(f'SVD 2D Embeddings (log-normalized, window={WINDOW})', fontsize=11)
+axes[1].set_xlabel('SVD Component 1')
+axes[1].set_ylabel('SVD Component 2')
 axes[1].grid(True, alpha=0.3)
 axes[1].axhline(y=0, color='k', linewidth=0.5, linestyle='--')
 axes[1].axvline(x=0, color='k', linewidth=0.5, linestyle='--')
 
-# 7c. Window size comparison: bar chart of similarities
-window_sizes = [1, 2, 3]
-sim_bank_money = []
-sim_river_lake = []
-sim_cross = []
-for ws in window_sizes:
-    cooc_ws = build_cooccurrence(CORPUS, word2idx, window_size=ws)
-    emb_ws, _ = svd_reduce(cooc_ws.astype(float), k=k)
-    sim_bank_money.append(cosine_sim(emb_ws[word2idx["banking"]], emb_ws[word2idx["money"]]))
-    sim_river_lake.append(cosine_sim(emb_ws[word2idx["river"]], emb_ws[word2idx["lake"]]))
-    sim_cross.append(cosine_sim(emb_ws[word2idx["banking"]], emb_ws[word2idx["forest"]]))
+# Add legend
+from matplotlib.lines import Line2D
+legend_elements = [
+    Line2D([0], [0], marker='o', color='w', markerfacecolor='#e74c3c', markersize=10, label='Finance'),
+    Line2D([0], [0], marker='s', color='w', markerfacecolor='#2ecc71', markersize=10, label='Nature'),
+    Line2D([0], [0], marker='D', color='w', markerfacecolor='#f39c12', markersize=10, label='Other'),
+]
+axes[1].legend(handles=legend_elements, fontsize=9, loc='upper right')
 
+# Window size comparison bar chart
 x_pos = np.arange(len(window_sizes))
 width = 0.25
+sim_bank_money = [all_sims[ws][0] for ws in window_sizes]
+sim_river_lake = [all_sims[ws][1] for ws in window_sizes]
+sim_cross = [all_sims[ws][2] for ws in window_sizes]
+
 axes[2].bar(x_pos - width, sim_bank_money, width, label='banking-money\n(same cluster)', color='#e74c3c', alpha=0.8)
 axes[2].bar(x_pos, sim_river_lake, width, label='river-lake\n(same cluster)', color='#2ecc71', alpha=0.8)
 axes[2].bar(x_pos + width, sim_cross, width, label='banking-forest\n(cross cluster)', color='#3498db', alpha=0.8)
-axes[2].set_title('Window Size Effect on Similarity', fontsize=12)
+axes[2].set_title('Window Size Effect on Cosine Similarity', fontsize=11)
 axes[2].set_xlabel('Window Size')
 axes[2].set_ylabel('Cosine Similarity')
 axes[2].set_xticks(x_pos)
 axes[2].set_xticklabels([f'w={ws}' for ws in window_sizes])
 axes[2].legend(fontsize=8)
-axes[2].set_ylim(-0.2, 1.1)
+axes[2].set_ylim(-0.5, 1.1)
 axes[2].grid(True, alpha=0.3, axis='y')
 
 plt.tight_layout()
@@ -266,43 +308,40 @@ plt.savefig('Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png', d
 plt.close()
 print("Saved: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png")
 
-# 7d. Detailed 2D scatter with cluster highlighting
+# 8b. Detailed 2D scatter with cluster regions
 fig2, ax2 = plt.subplots(figsize=(10, 8))
 
-# Draw convex hulls / ellipses for clusters
 from matplotlib.patches import Ellipse
 
-finance_words = ['banking', 'money', 'finance', 'economy']
-nature_words = ['river', 'lake', 'forest', 'mountain']
-
-# Finance cluster
-fin_pts = np.array([embeddings_w1[word2idx[w]] for w in finance_words])
+# Finance cluster ellipse
+fin_pts = np.array([embeddings_log[word2idx[w]] for w in finance_words])
 fin_center = fin_pts.mean(axis=0)
-fin_std = fin_pts.std(axis=0)
-ellipse_fin = Ellipse(fin_center, fin_std[0]*4, fin_std[1]*4, alpha=0.15, color='#e74c3c', label='Finance cluster')
+fin_std = fin_pts.std(axis=0) + 0.3
+ellipse_fin = Ellipse(fin_center, fin_std[0]*4, fin_std[1]*4, alpha=0.12, color='#e74c3c', label='Finance cluster')
 ax2.add_patch(ellipse_fin)
 
-# Nature cluster
-nat_pts = np.array([embeddings_w1[word2idx[w]] for w in nature_words])
+# Nature cluster ellipse
+nat_pts = np.array([embeddings_log[word2idx[w]] for w in nature_words])
 nat_center = nat_pts.mean(axis=0)
-nat_std = nat_pts.std(axis=0)
-ellipse_nat = Ellipse(nat_center, nat_std[0]*4, nat_std[1]*4, alpha=0.15, color='#2ecc71', label='Nature cluster')
+nat_std = nat_pts.std(axis=0) + 0.3
+ellipse_nat = Ellipse(nat_center, nat_std[0]*4, nat_std[1]*4, alpha=0.12, color='#2ecc71', label='Nature cluster')
 ax2.add_patch(ellipse_nat)
 
-# Plot all words
-for i, w in enumerate(vocab_set):
-    x, y = embeddings_w1[i, 0], embeddings_w1[i, 1]
+# Plot all content words
+for w in content_words:
+    i = word2idx[w]
+    x, y = embeddings_log[i, 0], embeddings_log[i, 1]
     if w in finance_words:
         color, marker, sz = '#e74c3c', 'o', 120
     elif w in nature_words:
         color, marker, sz = '#2ecc71', 's', 120
     else:
-        color, marker, sz = '#95a5a6', '^', 60
+        color, marker, sz = '#f39c12', 'D', 80
     ax2.scatter(x, y, c=color, marker=marker, s=sz, zorder=5, edgecolors='black', linewidth=0.5)
     ax2.annotate(w, (x, y), fontsize=10, fontweight='bold', ha='center', va='bottom',
                  xytext=(0, 8), textcoords='offset points')
 
-ax2.set_title('Co-occurrence + SVD: 2D Word Embeddings (window=1)\nFinance cluster (red) vs Nature cluster (green)', fontsize=13)
+ax2.set_title(f'Co-occurrence + SVD: 2D Word Embeddings\n(log-normalized, window={WINDOW}, k={k})\nFinance (red) vs Nature (green) — clusters separate!', fontsize=13)
 ax2.set_xlabel('SVD Component 1', fontsize=11)
 ax2.set_ylabel('SVD Component 2', fontsize=11)
 ax2.grid(True, alpha=0.3)
@@ -316,25 +355,27 @@ plt.close()
 print("Saved: Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png")
 
 # ============================================================
-# 8. Summary statistics for provenance
+# 9. Summary statistics for provenance
 # ============================================================
 print()
 print("=" * 60)
 print("SUMMARY STATISTICS")
 print("=" * 60)
-print(f"Matrix shape: {cooc_w1.shape}")
-print(f"Matrix total count: {cooc_w1.sum()}")
-print(f"Matrix nonzero entries: {np.count_nonzero(cooc_w1)}")
-print(f"Singular values (all): {singular_values.round(4)}")
-print(f"Top-{k} explained variance: {(singular_values[:k]**2 / (singular_values**2).sum() * 100).round(1)}%")
+print(f"Corpus: {len(CORPUS)} sentences, {len(all_tokens)} tokens, |V|={V}")
+print(f"Matrix shape: {cooc_raw.shape}")
+print(f"Matrix total count: {cooc_raw.sum()}")
+print(f"Matrix nonzero entries: {np.count_nonzero(cooc_raw)}")
+print(f"Log-normalized SVD singular values (top 6): {sv_log[:6].round(4)}")
+print(f"Top-{k} explained variance: {(sv_log[:k]**2 / (sv_log**2).sum() * 100).round(1)}%")
 print()
-print("Key cosine similarities (window=1, 2D SVD):")
-for w1, w2 in pairs:
-    sim = cosine_sim(embeddings_w1[word2idx[w1]], embeddings_w1[word2idx[w2]])
-    print(f"  cos({w1}, {w2}) = {sim:.4f}")
+print("Key cosine similarities (log-normalized, window=2, 2D SVD):")
+for w1, w2, label in pairs:
+    sim = cosine_sim(embeddings_log[word2idx[w1]], embeddings_log[word2idx[w2]])
+    print(f"  cos({w1}, {w2}) = {sim:.4f}  [{label}]")
 print()
-print("Window size effect:")
+print("Window size effect (log-normalized):")
 for ws in window_sizes:
-    print(f"  w={ws}: banking-money={sim_bank_money[ws-1]:.4f}, river-lake={sim_river_lake[ws-1]:.4f}, banking-forest={sim_cross[ws-1]:.4f}")
+    bm, rl, bf = all_sims[ws]
+    print(f"  w={ws}: banking-money={bm:.4f}, river-lake={rl:.4f}, banking-forest={bf:.4f}")
 print()
 print("DONE")

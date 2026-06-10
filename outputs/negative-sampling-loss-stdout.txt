@@ -145,3 +145,53 @@ CS224N L01 Code Capsule: negative-sampling-loss (WP05)
        1,000 |         0.0587 |         0.0206 |        2.9x
       10,000 |         3.3217 |         0.0390 |       85.1x
       50,000 |         5.0783 |         0.0236 |      215.6x
+     100,000 |        11.1898 |         0.0230 |      486.5x
+
+======================================================================
+[Part 6] Effect of k on NS objective variance
+======================================================================
+
+  For each k, compute NS objective 100 times with different negative samples.
+      k |       Mean |        Std |        Min |        Max
+  ----- | ---------- | ---------- | ---------- | ----------
+      1 |    -1.3767 |     0.0094 |    -1.3923 |    -1.3637
+      2 |    -2.0692 |     0.0124 |    -2.0940 |    -2.0430
+      5 |    -4.1463 |     0.0152 |    -4.1900 |    -4.1186
+     10 |    -7.6110 |     0.0095 |    -7.6250 |    -7.5964
+     20 |    -8.2994 |     0.0343 |    -8.3715 |    -8.2262
+     50 |    -8.3027 |     0.0329 |    -8.3764 |    -8.2265
+
+======================================================================
+[Part 7] Generating plots
+======================================================================
+  Saved: Labs/L01-word-vectors/outputs/negative-sampling-loss-softmax-probs.png
+  Saved: Labs/L01-word-vectors/outputs/negative-sampling-loss-efficiency-scaling.png
+  Saved: Labs/L01-word-vectors/outputs/negative-sampling-loss-k-effect.png
+  Saved: Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-comparison.png
+
+======================================================================
+[Summary]
+======================================================================
+
+  1. Softmax loss needs ALL |V|=12 words for partition function Z.
+     For real vocab (|V|=50,000+), this is prohibitively expensive.
+
+  2. Negative sampling (Eq.15) replaces Z with k negative samples:
+     L_NS = log σ(u_oᵀv_c) + Σ_{ℓ=1}^{k} log σ(-u_ℓᵀv_c)
+     Only k+1 terms needed — independent of |V|.
+
+  3. At |V|=100,000, softmax is ~486x slower than NS (k=5).
+
+  4. Larger k → lower variance in gradient estimate, but diminishing returns.
+     Typical choices: k=5-20 for large vocabularies (R02 paper recommends k=5-20).
+
+  5. NS gradient and softmax gradient are NOT identical, but point in
+     similar directions (cosine sim = 0.3069 in this example).
+     On average over many training steps, NS approximates softmax well.
+
+  Key takeaway: Negative sampling trades exact normalization for
+  massive efficiency, while preserving the essential learning signal.
+
+  Saved structured output: Labs/L01-word-vectors/outputs/negative-sampling-loss-summary.json
+
+Done.

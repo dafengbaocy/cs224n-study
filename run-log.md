@@ -37,3 +37,27 @@ Notes:
 - Partition function Z=18.273793 computed over all 10 words.
 - Cross-entropy loss for observed word 'problems': 1.875468.
 
+
+## run_id 20260610T040115Z__t_67005255__negative-sampling-loss
+
+task_id: t_67005255
+capsule_slug: negative-sampling-loss
+timestamp: 2026-06-10T04:01:15Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/negative-sampling-loss.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt (empty — no errors)
+outputs:
+  - Labs/L01-word-vectors/outputs/negative-sampling-loss-softmax-probs.png
+  - Labs/L01-word-vectors/outputs/negative-sampling-loss-efficiency-scaling.png
+  - Labs/L01-word-vectors/outputs/negative-sampling-loss-k-effect.png
+  - Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-comparison.png
+  - Labs/L01-word-vectors/outputs/negative-sampling-loss-summary.json
+notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
+
+Notes on run:
+- Used .venv/bin/python (has numpy/matplotlib); Colab also has both pre-installed.
+- No errors, no skipped cells.
+- k=20 uses replace=True because toy vocab (12 words) has only 11 available negatives.
+- Efficiency test uses realistic d=300, |V| up to 100,000.
