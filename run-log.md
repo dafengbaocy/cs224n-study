@@ -140,3 +140,46 @@ stderr: Labs/L01-word-vectors/outputs/one-hot-vs-dense-stderr.txt (empty)
 outputs: Labs/L01-word-vectors/outputs/one-hot-vs-dense-comparison.png, Labs/L01-word-vectors/outputs/one-hot-vs-dense-output.json
 notebook: Labs/L01-word-vectors/one-hot-vs-dense.ipynb
 note: pure stdlib + numpy/matplotlib (pre-installed in venv and Colab). Deterministic toy vectors. No errors. Chart generated via matplotlib Agg backend. Previous run files were lost during git rebase; this is a fresh re-run.
+
+## run_id 20260610T101832Z__t_ab4e78fa__co-occurrence-matrix
+
+task_id: t_ab4e78fa
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T10:18:32Z
+hostname: 0d61b5cf12fa
+command: python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty)
+outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-window-comparison.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-output.json
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/co-occurrence-matrix.ipynb
+note: Clean run. Corpus: 15 sentences, 30 vocab, 3 groups (animal/tech/water). SVD 2D cleanly separates groups. cat-dog=1.0, book-tech=1.0, cat-book=0.0. Images uploaded to obsidian-image repo. Concurrent process wrote to same files; capsule partial merged.
+
+## run_id 20260610T102037Z__t_9ab44084__negative-sampling-loss
+
+task_id: t_9ab44084
+capsule_slug: negative-sampling-loss
+timestamp: 2026-06-10T10:20:37Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/negative-sampling-loss.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-output.json, Labs/L01-word-vectors/outputs/negative-sampling-loss-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-scaling.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient.png
+notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
+note: pure stdlib core computation, matplotlib only for plots. Deterministic vectors (seed 42/99/2024). No errors. Plots generated separately via negative-sampling-loss-plots.py.
+
+## run_id 20260610T103312Z__t_6ff7c879__co-occurrence-matrix
+
+task_id: t_6ff7c879
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T10:33:12Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty)
+outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+note: Re-run for reviewer rework 1/5. Previous capsule partial had stale data from old corpus (animal/tech/water). Current .py uses finance/nature corpus (14 sentences, |V|=32). All numbers in capsule partial now match this run's stdout. 2 images uploaded to obsidian-image repo. Key finding: cross-cluster cosine (banking-river=0.9980) exceeds same-cluster (banking-money=0.9638) in 2D — demonstrates that 2D SVD is too aggressive for cluster separation.
