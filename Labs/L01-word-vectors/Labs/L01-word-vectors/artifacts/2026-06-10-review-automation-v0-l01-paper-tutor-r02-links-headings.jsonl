@@ -1,1 +1,0 @@
-{"check_id": "deterministic.links_headings", "evidence": [{"errors": [], "locator": "links=0; images=5; errors=0", "path_or_url": "/workspace/cs224n-study"}], "generated_by": "", "model": "", "reason": "All checked wikilinks/images resolve.", "reviewer": "deterministic_script", "timestamp": "2026-06-10T17:04:23+08:00", "type": "deterministic", "verdict": "pass"}
