@@ -183,3 +183,32 @@ stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty)
 outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
 notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
 note: Re-run for reviewer rework 1/5. Previous capsule partial had stale data from old corpus (animal/tech/water). Current .py uses finance/nature corpus (14 sentences, |V|=32). All numbers in capsule partial now match this run's stdout. 2 images uploaded to obsidian-image repo. Key finding: cross-cluster cosine (banking-river=0.9980) exceeds same-cluster (banking-money=0.9638) in 2D — demonstrates that 2D SVD is too aggressive for cluster separation.
+
+## run_id 20260610T184200Z__t_6ff7c879__co-occurrence-matrix
+
+task_id: t_6ff7c879
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T10:42:36Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt (empty)
+outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+colab_url: https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/co-occurrence-matrix.ipynb
+note: Rework 2/5. Notebook completely rewritten with all 5 required Chinese teaching sections (这段代码在看什么, 运行后先看哪里, 输出怎么解释, 和本讲哪个 waypoint 对应, 容易误解的地方). All 11 code cells now have Chinese comments. Previous notebook was a mechanical .py conversion without Chinese teaching content — this was the root cause of reviewer BLOCKs. Images re-uploaded (new URLs). GitHub push succeeded. Deterministic corpus, no errors.
+
+## run_id 20260610T104849Z__t_1b2d033e__skipgram-softmax
+
+task_id: t_1b2d033e
+capsule_slug: skipgram-softmax
+timestamp: 2026-06-10T10:48:49Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/skipgram-softmax.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/skipgram-softmax-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty — no errors)
+outputs: Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png, Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png, Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
+notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
+note: Rework 1/5. Previous capsule partial had stale 6-word data that did not match the actual 10-word .py script output. All numbers in capsule partial now match this run's stdout exactly. 3 images uploaded to obsidian-image repo. Vocabulary: 10 words (banking, crises, into, turning, problems, money, economy, policy, cat, dog). Center word: banking. P(banking|banking)=0.140090, P(crises|banking)=0.172826 (highest — context word). Z=18.273793. Cross-entropy loss for observed word 'problems': 1.875468.
