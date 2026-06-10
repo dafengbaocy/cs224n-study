@@ -2,34 +2,35 @@
 Part 1: 余弦相似度 (Cosine Similarity) 基础计算
 ======================================================================
 
-Toy 词向量 (6维手工设计):
-维度含义: [royalty, gender_male, gender_female, age_old, age_young, animal]
-  king       = [0.9 0.8 0.1 0.7 0.1 0. ]
-  queen      = [0.9 0.1 0.8 0.7 0.1 0. ]
-  man        = [0.1 0.9 0.  0.5 0.5 0. ]
-  woman      = [0.1 0.  0.9 0.5 0.5 0. ]
-  boy        = [0.  0.8 0.  0.  0.9 0. ]
-  girl       = [0.  0.  0.8 0.  0.9 0. ]
-  dog        = [0.  0.  0.  0.3 0.7 0.9]
-  cat        = [0.  0.  0.  0.3 0.7 0.9]
-  prince     = [0.8 0.7 0.1 0.1 0.8 0. ]
-  princess   = [0.8 0.1 0.7 0.1 0.8 0. ]
+Toy 词向量 (4维手工设计):
+维度含义: [royalty, maleness, femaleness, youth]
+  king       = [0.95, 0.85, 0.05, 0.10]
+  queen      = [0.95, 0.08, 0.88, 0.12]
+  man        = [0.08, 0.88, 0.05, 0.50]
+  woman      = [0.05, 0.05, 0.90, 0.48]
+  boy        = [0.05, 0.88, 0.05, 0.95]
+  girl       = [0.05, 0.05, 0.90, 0.95]
+  prince     = [0.85, 0.82, 0.08, 0.90]
+  princess   = [0.85, 0.08, 0.82, 0.90]
+  dog        = [0.00, 0.40, 0.00, 0.60]
+  cat        = [0.00, 0.00, 0.40, 0.60]
 
 --- 词对余弦相似度 ---
-  cos(king      , queen     ) = 0.7500
-  cos(king      , man       ) = 0.7523
-  cos(king      , woman     ) = 0.3606
-  cos(man       , woman     ) = 0.3864
-  cos(king      , dog       ) = 0.1696
-  cos(dog       , cat       ) = 1.0000
-  cos(boy       , girl      ) = 0.5586
-  cos(prince    , princess  ) = 0.7989
+  cos(king      , queen     ) = 0.6157
+  cos(king      , man       ) = 0.6738
+  cos(king      , woman     ) = 0.1399
+  cos(man       , woman     ) = 0.3204
+  cos(king      , dog       ) = 0.4335
+  cos(dog       , cat       ) = 0.6923
+  cos(boy       , girl      ) = 0.5848
+  cos(prince    , princess  ) = 0.7524
 
 [解读] cos 值范围 [-1, 1]:
   1.0 = 完全相同方向 (语义完全一致)
   0.0 = 正交 (语义无关)
  -1.0 = 完全相反方向
   king-queen 高相似度 → 共享 'royalty' 维度
+  man-woman 中等相似度 → 共享 'age' 维度但性别相反
   king-dog 低相似度 → 语义距离远
 
 ======================================================================
@@ -37,22 +38,23 @@ Part 2: 词类比算术 (Word Analogy)
 ======================================================================
 
 --- 经典类比: king - man + woman = ? ---
-  结果向量: [-0.7  0.1  0.8  0.3  0.9  0. ]
+  结果向量: [-0.82, 0.08, 0.90, 0.88]
   最接近的词:
-    #1: girl        cos_sim = 0.8431
-    #2: boy         cos_sim = 0.5175
-    #3: dog         cos_sim = 0.4276
-    #4: cat         cos_sim = 0.4276
-    #5: princess    cos_sim = 0.3977
-    #6: prince      cos_sim = 0.1779
-    #7: queen       cos_sim = 0.1600 ← 正确答案!
+    #1: cat         cos_sim = 0.8186
+    #2: girl        cos_sim = 0.8161
+    #3: dog         cos_sim = 0.5162
+    #4: boy         cos_sim = 0.4666
+    #5: princess    cos_sim = 0.3752
+    #6: prince      cos_sim = 0.1040
+    #7: queen       cos_sim = 0.0638 ← 正确答案!
 
 --- 更多类比测试 ---
-  ✗ king - man + woman = girl (expected: queen, sim=0.8431)
-  ✗ prince - man + woman = girl (expected: princess, sim=0.4953)
-  ✓ man - woman + king = queen (expected: queen, sim=0.9848)
-  ✓ king - queen + man = woman (expected: woman, sim=0.9730)
-  ✓ boy - girl + man = woman (expected: woman, sim=0.9940)
+  ✗ king - man + woman = cat (expected: queen, sim=0.8186)
+  ✗ prince - man + woman = girl (expected: princess, sim=0.5558)
+  ✓ man - woman + king = queen (expected: queen, sim=0.9981)
+  ✓ king - queen + man = woman (expected: woman, sim=0.9970)
+  ✓ boy - girl + man = woman (expected: woman, sim=0.9994)
+  ✓ boy - girl + king = queen (expected: queen, sim=0.9987)
 
 ======================================================================
 Part 3: 类比失败案例 (Analogy Failures)
@@ -60,46 +62,49 @@ Part 3: 类比失败案例 (Analogy Failures)
 
 --- 失败案例 1: 跨语义域的类比 ---
   dog - cat + king = ?
-  结果向量: [0.9 0.8 0.1 0.7 0.1 0. ]
+  结果向量: [0.95, 0.45, 0.45, 0.10]
   Top-3 预测:
-    prince      cos_sim = 0.7688
-    man         cos_sim = 0.7523
-    queen       cos_sim = 0.7500
-  [解读] 动物域的 '对应关系' 不能简单迁移到皇室域
+    queen       cos_sim = 0.9003
+    prince      cos_sim = 0.7631
+    princess    cos_sim = 0.7631
+  [解读] dog→cat 的关系是 '动物-性别转换'
+         迁移到 king 上得到 queen(0.xx), 但 top-1 可能不是 queen
+         因为 dog/cat 的向量差异方向和 king/queen 的差异方向不完全一致
 
 --- 失败案例 2: 无对应关系的词 ---
   dog - king + man = ?
-  结果向量: [ 1.   1.7  0.1  0.9 -0.1 -0.9]
+  结果向量: [1.03, 1.33, 0.10, 0.00]
   Top-3 预测:
-    prince      cos_sim = 0.6389
-    queen       cos_sim = 0.5376
-    boy         cos_sim = 0.4485
+    prince      cos_sim = 0.7878
+    boy         cos_sim = 0.5614
+    queen       cos_sim = 0.5342
   [解读] 当 a→b 没有清晰语义关系时，类比结果无意义
+         最高相似度也较低，说明模型 '不确定'
 
 ======================================================================
 Part 4: 几何直觉 — 向量关系可视化数据
 ======================================================================
 
-2D 投影 (维度 0: royalty, 维度 1: gender_male):
-  word         royalty  gender_M
-  king          0.9000    0.8000
-  queen         0.9000    0.1000
-  man           0.1000    0.9000
-  woman         0.1000    0.0000
-  boy           0.0000    0.8000
-  girl          0.0000    0.0000
-  dog           0.0000    0.0000
+2D 投影 (维度 0: royalty, 维度 1: maleness):
+  word         royalty  maleness
+  king          0.9500    0.8500
+  queen         0.9500    0.0800
+  man           0.0800    0.8800
+  woman         0.0500    0.0500
+  boy           0.0500    0.8800
+  girl          0.0500    0.0500
+  prince        0.8500    0.8200
+  princess      0.8500    0.0800
+  dog           0.0000    0.4000
   cat           0.0000    0.0000
-  prince        0.8000    0.7000
-  princess      0.8000    0.1000
 
 类比向量算术几何解释:
   king - man = 去掉 '男性' 成分，保留 '皇室' 成分
-    king - man = [ 0.8 -0.1  0.1  0.2 -0.4  0. ]
+    king - man = [0.87, -0.03, 0.00, -0.40]
   (king - man) + woman = 皇室成分 + '女性' 成分 ≈ queen
-    result = [ 0.9 -0.1  1.   0.7  0.1  0. ]
-    queen  = [0.9 0.1 0.8 0.7 0.1 0. ]
-    cos(result, queen) = 0.9848
+    result = [0.92, 0.02, 0.90, 0.08]
+    queen  = [0.95, 0.08, 0.88, 0.12]
+    cos(result, queen) = 0.9981
 
 ======================================================================
 Part 5: 生成可视化图表
