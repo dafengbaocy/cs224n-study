@@ -212,3 +212,18 @@ stderr: Labs/L01-word-vectors/outputs/skipgram-softmax-stderr.txt (empty — no 
 outputs: Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png, Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png, Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
 notebook: Labs/L01-word-vectors/skipgram-softmax.ipynb
 note: Rework 1/5. Previous capsule partial had stale 6-word data that did not match the actual 10-word .py script output. All numbers in capsule partial now match this run's stdout exactly. 3 images uploaded to obsidian-image repo. Vocabulary: 10 words (banking, crises, into, turning, problems, money, economy, policy, cat, dog). Center word: banking. P(banking|banking)=0.140090, P(crises|banking)=0.172826 (highest — context word). Z=18.273793. Cross-entropy loss for observed word 'problems': 1.875468.
+
+## run_id 20260610T190400Z__t_9ab44084__negative-sampling-loss
+
+task_id: t_9ab44084
+capsule_slug: negative-sampling-loss
+timestamp: 2026-06-10T19:04:00Z
+hostname: hermes-agent
+command: python Labs/L01-word-vectors/negative-sampling-loss.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/negative-sampling-loss-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/negative-sampling-loss-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-comparison.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-scaling.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient.png, Labs/L01-word-vectors/outputs/negative-sampling-loss-output.json
+notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
+notebook_execution: jupyter execute --inplace (all 7 code cells executed, outputs verified)
+note: rework run 2/5 — fixed data inconsistency between capsule partial and stdout. Previous run (t_d42c43e7) had overwritten partial with |V|=10 data while stdout had |V|=6 data. This run re-executed everything from the canonical .py script and rewrote partial/notebook/media-registry to match.
