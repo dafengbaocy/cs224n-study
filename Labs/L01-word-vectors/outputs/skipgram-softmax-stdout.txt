@@ -1,0 +1,143 @@
+======================================================================
+CS224N L01 Code Capsule: skipgram-softmax
+Waypoint WP03: Skip-gram softmax probability P(o|c)
+======================================================================
+
+Vocabulary size |V| = 6
+Embedding dimension d = 4
+Words: ['banking', 'money', 'river', 'bank', 'crisis', 'water']
+
+--- Center vectors (v_w) ---
+  v_ banking = [ 0.5  0.8 -0.2  0.3]
+  v_   money = [ 0.4  0.7 -0.1  0.2]
+  v_   river = [-0.3  0.1  0.9  0.6]
+  v_    bank = [0.2 0.5 0.4 0.5]
+  v_  crisis = [-0.5  0.6 -0.3  0.1]
+  v_   water = [-0.2  0.   0.8  0.7]
+
+--- Context vectors (u_w) ---
+  u_ banking = [ 0.6  0.7 -0.3  0.2]
+  u_   money = [ 0.5  0.8 -0.2  0.1]
+  u_   river = [-0.4  0.2  0.8  0.5]
+  u_    bank = [0.3 0.6 0.3 0.4]
+  u_  crisis = [-0.6  0.5 -0.4  0. ]
+  u_   water = [-0.3  0.1  0.7  0.6]
+
+======================================================================
+STEP-BY-STEP: Computing P(o|c) for center word 'banking'
+======================================================================
+
+Center word c = 'banking'
+v_c = [ 0.5  0.8 -0.2  0.3]
+
+--- Step 1: Dot products (u_w^T · v_c) for all w ∈ V ---
+  u_ banking^T · v_banking = 0.980000
+  u_   money^T · v_banking = 0.960000
+  u_   river^T · v_banking = -0.050000
+  u_    bank^T · v_banking = 0.690000
+  u_  crisis^T · v_banking = 0.180000
+  u_   water^T · v_banking = -0.030000
+
+--- Step 2: Exponentiation exp(u_w^T · v_c) ---
+  exp(0.980000) = 2.664456
+  exp(0.960000) = 2.611696
+  exp(-0.050000) = 0.951229
+  exp(0.690000) = 1.993716
+  exp(0.180000) = 1.197217
+  exp(-0.030000) = 0.970446
+
+--- Step 3: Normalization ---
+  Partition function Z = Σ exp(u_w^T · v_c) = 10.388761
+  (This sum requires iterating over ALL |V|=6 words!)
+
+--- Final: P(o|c='banking') for each context word o ---
+  P( banking | banking) = 0.256475  ████████████
+  P(   money | banking) = 0.251396  ████████████
+  P(   river | banking) = 0.091563  ████
+  P(    bank | banking) = 0.191911  █████████
+  P(  crisis | banking) = 0.115242  █████
+  P(   water | banking) = 0.093413  ████
+
+  Sum of all probabilities = 1.0000000000 (should be 1.0)
+
+======================================================================
+COMPARISON: P(o|c) for different center words
+======================================================================
+
+P(o | c='banking'), Z=10.3888:
+  P( banking|banking) = 0.256475  ████████████ ← (same word)
+  P(   money|banking) = 0.251396  ████████████
+  P(   river|banking) = 0.091563  ████
+  P(    bank|banking) = 0.191911  █████████
+  P(  crisis|banking) = 0.115242  █████
+  P(   water|banking) = 0.093413  ████
+
+P(o | c='river'), Z=10.2564:
+  P( banking|river) = 0.075178  ███
+  P(   money|river) = 0.080629  ████
+  P(   river|river) = 0.311019  ███████████████ ← (same word)
+  P(    bank|river) = 0.157568  ███████
+  P(  crisis|river) = 0.085614  ████
+  P(   water|river) = 0.289992  ██████████████
+
+P(o | c='crisis'), Z=8.0371:
+  P( banking|crisis) = 0.156599  ███████
+  P(   money|crisis) = 0.167954  ████████
+  P(   river|crisis) = 0.141697  ███████
+  P(    bank|crisis) = 0.146012  ███████
+  P(  crisis|crisis) = 0.255620  ████████████ ← (same word)
+  P(   water|crisis) = 0.132117  ██████
+
+======================================================================
+KEY INSIGHT: Semantic similarity affects P(o|c)
+======================================================================
+
+When c='banking':
+  P(money|banking)  = 0.251396  (semantically similar)
+  P(river|banking)  = 0.091563  (semantically different)
+  Ratio = 2.75x
+
+This is because v_banking and u_money have similar directions,
+so their dot product is larger → higher exp → higher probability.
+
+======================================================================
+COMPUTATIONAL BOTTLENECK: Partition function Z
+======================================================================
+
+For each center word, computing Z requires |V| dot products:
+  Z = Σ_{w∈V} exp(u_w^T · v_c)
+
+  |V| (vocab size)  |  Dot products per center word
+  ────────────────────┼──────────────────────────────
+                 6  |                 6 dot products + exp + sum
+               100  |               100 dot products + exp + sum
+             1,000  |             1,000 dot products + exp + sum
+            10,000  |            10,000 dot products + exp + sum
+            50,000  |            50,000 dot products + exp + sum
+           100,000  |           100,000 dot products + exp + sum
+
+In a corpus with T=10M tokens, total operations ≈ T × |V|:
+  |V|= 10,000: 1.00e+11 operations per epoch
+  |V|= 50,000: 5.00e+11 operations per epoch
+  |V|=100,000: 1.00e+12 operations per epoch
+
+This is why Negative Sampling (WP05) replaces the full softmax
+with k binary classifiers — reducing O(|V|) to O(k) per step.
+
+======================================================================
+Generating plots...
+======================================================================
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-three-steps.png
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-computation-cost.png
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-output.json
+
+======================================================================
+CAPSULE COMPLETE
+======================================================================
+
+All outputs in: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/
+  - skipgram-softmax-prob-distribution.png
+  - skipgram-softmax-three-steps.png
+  - skipgram-softmax-computation-cost.png
+  - skipgram-softmax-output.json
