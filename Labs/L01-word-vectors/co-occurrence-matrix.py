@@ -1,431 +1,325 @@
 #!/usr/bin/env python3
 """
 CS224N L01 Word Vectors — Code Capsule: co-occurrence-matrix
-Waypoint: WP02 (Distributional Semantics)
-Official anchor: Notes §3.1 (co-occurrence matrices); A1 Part 1 Q1.1-1.3
+=============================================================
+概念：从语料构建共现矩阵（co-occurrence matrix）并用 SVD 降维。
+对应：Notes §3.1 (co-occurrence matrices); A1 Part 1 Q1.1-1.3
+Waypoint: WP02
 
-Demonstrates:
-1. Building a co-occurrence matrix from a small toy corpus
-2. Log-frequency weighting (Notes §3.1: "replace each count X_ij with log(1 + X_ij)")
-3. SVD dimensionality reduction (truncated to k=2)
-4. Visualization of co-occurrence matrix and 2D embeddings
-5. Effect of window size on co-occurrence statistics
-6. Cosine similarity between word vectors after SVD
+这段代码在看什么：
+  1. 用一个极小语料（6 句话）统计词与词在窗口内共同出现的次数
+  2. 得到一个 V×V 的共现矩阵（V = 词汇量）
+  3. 用 SVD（奇异值分解）把高维稀疏矩阵降到 2 维
+  4. 在 2D 散点图上观察：语义相近的词是否聚在一起
 
-All computations use numpy/scipy (no PyTorch/TensorFlow needed).
+运行后先看哪里：
+  - 共现矩阵表格：注意哪些词对计数 > 0，哪些是 0
+  - SVD 2D 坐标表：看语义相近的词（如 cat/dog）坐标是否接近
+  - 散点图：直观看到降维后的词向量分布
+
+输出怎么解释：
+  - 共现矩阵的每个元素 M[i][j] = 词 i 和词 j 在窗口内共同出现的次数
+  - SVD 把 V 维向量压缩到 2 维，保留最大的两个奇异值对应的方向
+  - 如果两个词的上下文相似，它们在 2D 图上会靠在一起
+
+和本讲哪个 waypoint 对应：WP02 — One-hot vs Dense Vectors
+  - Notes §3.1 说"构建共现矩阵 → SVD 降维 → 得到 dense vector"
+  - 这个 capsule 把整个过程跑一遍
+
+容易误解的地方：
+  - 共现矩阵是对称的（无向窗口），但如果是定向窗口（只看右边）则不对称
+  - SVD 降维后坐标的符号可能翻转（因为奇异向量方向不唯一），但相对距离不变
+  - toy 语料太小，2D 图只是示意；真实场景需要大语料 + 更高维度
 """
 
-import json
-import os
-import sys
 import numpy as np
-from collections import Counter, defaultdict
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from collections import Counter
+import json
+import sys
+import os
 
-# ─────────────────────────────────────────────────────────────
-# 1. TOY CORPUS — two semantic clusters
-# ─────────────────────────────────────────────────────────────
-
-CORPUS = [
-    # Finance cluster
-    "banking money finance economy",
-    "money market invest finance",
-    "banking invest market economy",
-    "finance economy market money",
-    "invest banking economy finance",
-    "market economy banking money",
-    # Nature cluster
-    "river lake forest mountain",
-    "lake ocean valley forest",
-    "forest mountain river valley",
-    "mountain valley ocean river",
-    "ocean river lake mountain",
-    "valley forest ocean lake",
-    # Bridge sentences (share function words)
-    "the banking river flows",
-    "the forest economy grows",
+# ============================================================
+# 第 1 步：定义极小语料
+# ============================================================
+# 选择语义相关的词对：cat/dog（动物），bank/river（自然），bank/money（金融）
+corpus = [
+    "the cat sat on the mat",
+    "the dog sat on the log",
+    "the cat and the dog played in the park",
+    "the bank is near the river",
+    "the river flows to the sea",
+    "money from the bank helps the economy",
 ]
 
-print("=" * 70)
-print("CS224N L01 — Code Capsule: co-occurrence-matrix (WP02)")
-print("=" * 70)
+print("=" * 60)
+print("CS224N L01 Code Capsule: Co-occurrence Matrix + SVD")
+print("=" * 60)
 print()
-print(f"Corpus: {len(CORPUS)} sentences")
-for i, sent in enumerate(CORPUS):
-    print(f"  [{i:2d}] {sent}")
+print("Corpus:")
+for i, sent in enumerate(corpus):
+    print(f"  [{i}] {sent}")
 print()
 
-# ─────────────────────────────────────────────────────────────
-# 2. BUILD VOCABULARY
-# ─────────────────────────────────────────────────────────────
+# ============================================================
+# 第 2 步：构建词汇表
+# ============================================================
+all_words = []
+for sent in corpus:
+    all_words.extend(sent.lower().split())
 
-def build_vocab(corpus):
-    """Build sorted vocabulary from corpus."""
-    counter = Counter()
-    for sent in corpus:
-        counter.update(sent.split())
-    vocab = sorted(counter.keys())
-    word2idx = {w: i for i, w in enumerate(vocab)}
-    return vocab, word2idx, counter
-
-vocab, word2idx, word_freq = build_vocab(CORPUS)
+vocab = sorted(set(all_words))
+word_to_idx = {w: i for i, w in enumerate(vocab)}
 V = len(vocab)
-print(f"Vocabulary size |V| = {V}")
-print(f"Words: {vocab}")
+
+print(f"Vocabulary size V = {V}")
+print(f"Vocab: {vocab}")
 print()
 
-# ─────────────────────────────────────────────────────────────
-# 3. BUILD CO-OCCURRENCE MATRIX
-# ─────────────────────────────────────────────────────────────
-
-def build_cooccurrence(corpus, word2idx, vocab_size, window_size=2):
-    """
-    Build co-occurrence matrix with given window size.
-    X[i][j] = number of times word j appears within window_size of word i.
-    Symmetric: we count both directions.
-    """
-    X = np.zeros((vocab_size, vocab_size), dtype=np.float64)
-    
+# ============================================================
+# 第 3 步：构建共现矩阵（窗口大小 = 1）
+# ============================================================
+def build_cooccurrence_matrix(corpus, word_to_idx, window_size=1):
+    """Build co-occurrence matrix. For each center word, count words within window."""
+    V = len(word_to_idx)
+    matrix = np.zeros((V, V), dtype=int)
     for sent in corpus:
-        tokens = sent.split()
-        for center_pos, center_word in enumerate(tokens):
-            if center_word not in word2idx:
-                continue
-            c_idx = word2idx[center_word]
-            # Look at context window
-            start = max(0, center_pos - window_size)
-            end = min(len(tokens), center_pos + window_size + 1)
-            for ctx_pos in range(start, end):
-                if ctx_pos == center_pos:
-                    continue
-                ctx_word = tokens[ctx_pos]
-                if ctx_word not in word2idx:
-                    continue
-                x_idx = word2idx[ctx_word]
-                X[c_idx][x_idx] += 1.0
-    
-    return X
+        words = sent.lower().split()
+        for i, word in enumerate(words):
+            ci = word_to_idx[word]
+            for j in range(max(0, i - window_size), i):
+                matrix[ci][word_to_idx[words[j]]] += 1
+            for j in range(i + 1, min(len(words), i + window_size + 1)):
+                matrix[ci][word_to_idx[words[j]]] += 1
+    return matrix
 
-# Build with default window_size=2
-WINDOW_SIZE = 2
-X_raw = build_cooccurrence(CORPUS, word2idx, V, window_size=WINDOW_SIZE)
+window_size = 1
+cooc_matrix = build_cooccurrence_matrix(corpus, word_to_idx, window_size)
 
-print(f"--- Co-occurrence Matrix (window_size={WINDOW_SIZE}) ---")
-print(f"Matrix shape: ({V}, {V}) = {V*V} entries")
-total_count = X_raw.sum()
-nonzero = np.count_nonzero(X_raw)
-sparsity = 1.0 - nonzero / (V * V)
-print(f"Total co-occurrence count: {total_count:.0f}")
-print(f"Nonzero entries: {nonzero}")
-print(f"Sparsity: {sparsity:.1%}")
+print(f"Co-occurrence matrix (window={window_size})")
+print(f"  Shape: {cooc_matrix.shape} ({V}x{V})")
 print()
 
-# Print matrix as table
-print("Co-occurrence matrix (raw counts):")
-header = "         " + "".join(f"{w:>10s}" for w in vocab)
+def abbreviate(w, maxlen=6):
+    return w[:maxlen] if len(w) <= maxlen else w[:maxlen-1] + "."
+
+header = "       " + "".join(f"{abbreviate(w):>7}" for w in vocab)
 print(header)
 for i, w in enumerate(vocab):
-    row = f"{w:>8s}" + "".join(f"{X_raw[i][j]:10.0f}" for j in range(V))
+    row = f"{abbreviate(w):>6} " + "".join(f"{cooc_matrix[i][j]:>7}" for j in range(V))
     print(row)
 print()
 
-# ─────────────────────────────────────────────────────────────
-# 4. LOG NORMALIZATION (Notes §3.1)
-# ─────────────────────────────────────────────────────────────
-
-X_log = np.log1p(X_raw)  # log(1 + x)
-
-print("--- Log normalization: X_log = log(1 + X) ---")
-print("(Notes §3.1: 'replace each count X_ij with log(1 + X_ij)')")
-print(f"Max raw count: {X_raw.max():.0f}")
-print(f"Max log count: {X_log.max():.4f}")
-print(f"Example: raw count 5 -> log(1+5) = {np.log1p(5):.4f}")
-print(f"Example: raw count 1 -> log(1+1) = {np.log1p(1):.4f}")
+nnz = np.count_nonzero(cooc_matrix)
+total = V * V
+sparsity = 1.0 - nnz / total
+print(f"  Non-zero: {nnz}/{total} = {nnz/total:.1%}")
+print(f"  Sparsity: {sparsity:.1%}")
 print()
 
-# ─────────────────────────────────────────────────────────────
-# 5. SVD DIMENSIONALITY REDUCTION
-# ─────────────────────────────────────────────────────────────
+# ============================================================
+# 第 4 步：SVD 降维到 2D
+# ============================================================
+print("SVD reduction to k=2")
+U, S, Vt = np.linalg.svd(cooc_matrix.astype(float))
+k = 2
+coords_2d = U[:, :k] * S[:k]
 
-from scipy.linalg import svd
-
-K = 2  # target dimensions
-
-U, s, Vt = svd(X_log, full_matrices=False)
-
-# Truncate to k dimensions
-U_k = U[:, :K]
-s_k = s[:K]
-
-# Word vectors = U_k * diag(s_k)  (each row is a word's k-dim vector)
-word_vectors = U_k * s_k[np.newaxis, :]
-
-print(f"--- SVD: {V}D -> {K}D ---")
-print(f"Singular values (all): {s[:min(8, len(s))]}")
-print(f"Top-{K} singular values: {s_k}")
+print(f"  Top-{k} singular values: {S[:k]}")
+print(f"  All singular values: {S}")
 print()
 
-# Explained variance
-total_var = np.sum(s**2)
-explained_var = np.sum(s_k**2)
-explained_ratio = explained_var / total_var
-print(f"Total variance (sum of all sigma^2): {total_var:.4f}")
-print(f"Top-{K} variance: {explained_var:.4f}")
-print(f"Explained variance ratio: {explained_ratio:.1%}")
-print()
-
-# Print 2D coordinates
-print(f"--- 2D Word Embeddings (after SVD, k={K}) ---")
-print(f"{'Word':>12s}  {'dim0':>10s}  {'dim1':>10s}  {'norm':>10s}")
-print("-" * 46)
+print("2D coordinates (SVD):")
+print(f"  {'word':>10}  {'x':>8}  {'y':>8}")
+print(f"  {'-'*10}  {'-'*8}  {'-'*8}")
 for i, w in enumerate(vocab):
-    vec = word_vectors[i]
-    norm = np.linalg.norm(vec)
-    print(f"{w:>12s}  {vec[0]:10.4f}  {vec[1]:10.4f}  {norm:10.4f}")
+    print(f"  {w:>10}  {coords_2d[i, 0]:>8.4f}  {coords_2d[i, 1]:>8.4f}")
 print()
 
-# ─────────────────────────────────────────────────────────────
-# 6. COSINE SIMILARITY
-# ─────────────────────────────────────────────────────────────
-
-def cosine_sim(a, b):
-    """Cosine similarity between two vectors."""
-    norm_a = np.linalg.norm(a)
-    norm_b = np.linalg.norm(b)
-    if norm_a < 1e-10 or norm_b < 1e-10:
-        return 0.0
-    return np.dot(a, b) / (norm_a * norm_b)
-
-print("--- Cosine Similarities (after SVD k=2) ---")
-print()
-
-# Define semantic clusters for comparison
-finance_words = ["banking", "money", "finance", "economy", "market", "invest"]
-nature_words = ["river", "lake", "forest", "mountain", "valley", "ocean"]
-
-# Filter to words actually in vocab
-finance_words = [w for w in finance_words if w in word2idx]
-nature_words = [w for w in nature_words if w in word2idx]
-
-print("Within-cluster similarities (should be HIGH):")
-print(f"{'Word A':>12s}  {'Word B':>12s}  {'cosine':>8s}")
-print("-" * 36)
-within_sims = []
-for i in range(min(3, len(finance_words))):
-    for j in range(i+1, min(3, len(finance_words))):
-        w1, w2 = finance_words[i], finance_words[j]
-        sim = cosine_sim(word_vectors[word2idx[w1]], word_vectors[word2idx[w2]])
-        within_sims.append(sim)
-        print(f"{w1:>12s}  {w2:>12s}  {sim:8.4f}")
-
-for i in range(min(3, len(nature_words))):
-    for j in range(i+1, min(3, len(nature_words))):
-        w1, w2 = nature_words[i], nature_words[j]
-        sim = cosine_sim(word_vectors[word2idx[w1]], word_vectors[word2idx[w2]])
-        within_sims.append(sim)
-        print(f"{w1:>12s}  {w2:>12s}  {sim:8.4f}")
-print()
-
-print("Cross-cluster similarities (should be LOWER):")
-print(f"{'Word A':>12s}  {'Word B':>12s}  {'cosine':>8s}")
-print("-" * 36)
-cross_sims = []
-for w1 in finance_words[:3]:
-    for w2 in nature_words[:3]:
-        sim = cosine_sim(word_vectors[word2idx[w1]], word_vectors[word2idx[w2]])
-        cross_sims.append(sim)
-        print(f"{w1:>12s}  {w2:>12s}  {sim:8.4f}")
-print()
-
-if within_sims and cross_sims:
-    print(f"Mean within-cluster cosine:  {np.mean(within_sims):.4f}")
-    print(f"Mean cross-cluster cosine:   {np.mean(cross_sims):.4f}")
-    print(f"Difference:                  {np.mean(within_sims) - np.mean(cross_sims):.4f}")
-    print()
-    if np.mean(within_sims) > np.mean(cross_sims):
-        print(">>> KEY OBSERVATION: Within-cluster similarity > Cross-cluster similarity")
-        print(">>> Co-occurrence + SVD captures semantic clusters from raw counts alone!")
-    else:
-        print(">>> NOTE: With this tiny corpus, cluster separation may be weak.")
-        print(">>> This is expected -- real corpora have thousands of sentences.")
-print()
-
-# ─────────────────────────────────────────────────────────────
-# 7. WINDOW SIZE COMPARISON
-# ─────────────────────────────────────────────────────────────
-
-print("--- Window Size Comparison ---")
-print()
-for ws in [1, 2, 4]:
-    X_ws = build_cooccurrence(CORPUS, word2idx, V, window_size=ws)
-    nonzero_ws = np.count_nonzero(X_ws)
-    sparsity_ws = 1.0 - nonzero_ws / (V * V)
-    total_ws = X_ws.sum()
-    
-    # SVD on log-normalized
-    X_log_ws = np.log1p(X_ws)
-    U_ws, s_ws, Vt_ws = svd(X_log_ws, full_matrices=False)
-    wv_ws = U_ws[:, :K] * s_ws[:K][np.newaxis, :]
-    explained_ws = np.sum(s_ws[:K]**2) / np.sum(s_ws**2)
-    
-    # Sample cosine
-    sim_finance = cosine_sim(wv_ws[word2idx["banking"]], wv_ws[word2idx["finance"]])
-    sim_nature = cosine_sim(wv_ws[word2idx["river"]], wv_ws[word2idx["lake"]])
-    sim_cross = cosine_sim(wv_ws[word2idx["banking"]], wv_ws[word2idx["river"]])
-    
-    print(f"Window size = {ws}:")
-    print(f"  Total count: {total_ws:.0f}, Nonzero: {nonzero_ws}, Sparsity: {sparsity_ws:.1%}")
-    print(f"  Explained variance (k=2): {explained_ws:.1%}")
-    print(f"  cos(banking, finance) = {sim_finance:.4f}")
-    print(f"  cos(river, lake)      = {sim_nature:.4f}")
-    print(f"  cos(banking, river)   = {sim_cross:.4f}")
-    print()
-
-print(">>> Notes 3.1 insight: smaller window -> more syntactic info;")
-print(">>> larger window -> more semantic/topic info.")
-print()
-
-# ─────────────────────────────────────────────────────────────
-# 8. SAVE OUTPUTS
-# ─────────────────────────────────────────────────────────────
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, "outputs")
-os.makedirs(output_dir, exist_ok=True)
-
-# Save 2D coordinates as JSON
-coords = {}
+# ============================================================
+# 第 5 步：散点图
+# ============================================================
+fig, ax = plt.subplots(1, 1, figsize=(10, 7))
+ax.scatter(coords_2d[:, 0], coords_2d[:, 1], c='steelblue', s=60, zorder=5)
 for i, w in enumerate(vocab):
-    coords[w] = {
-        "dim0": float(word_vectors[i, 0]),
-        "dim1": float(word_vectors[i, 1]),
-        "cluster": "finance" if w in finance_words else ("nature" if w in nature_words else "bridge")
-    }
-
-coords_path = os.path.join(output_dir, "co-occurrence-matrix-svd-coordinates.json")
-with open(coords_path, "w") as f:
-    json.dump({
-        "window_size": WINDOW_SIZE,
-        "vocab_size": V,
-        "k": K,
-        "explained_variance_ratio": float(explained_ratio),
-        "singular_values_top_k": s_k.tolist(),
-        "coordinates": coords,
-        "matrix_stats": {
-            "total_count": float(total_count),
-            "nonzero_entries": int(nonzero),
-            "sparsity": float(sparsity)
-        }
-    }, f, indent=2, ensure_ascii=False)
-print(f"Saved coordinates: {coords_path}")
-
-# ─────────────────────────────────────────────────────────────
-# 9. VISUALIZATION
-# ─────────────────────────────────────────────────────────────
-
-import matplotlib
-matplotlib.use('Agg')  # non-interactive backend
-import matplotlib.pyplot as plt
-
-# --- Plot 1: Co-occurrence matrix heatmap ---
-fig, axes = plt.subplots(1, 2, figsize=(16, 7))
-
-# Raw counts
-im1 = axes[0].imshow(X_raw, cmap='YlOrRd', aspect='auto')
-axes[0].set_xticks(range(V))
-axes[0].set_yticks(range(V))
-axes[0].set_xticklabels(vocab, rotation=45, ha='right', fontsize=8)
-axes[0].set_yticklabels(vocab, fontsize=8)
-axes[0].set_title(f'Raw Co-occurrence Matrix (window={WINDOW_SIZE})\nTotal={total_count:.0f}, nonzero={nonzero}, sparsity={sparsity:.1%}')
-plt.colorbar(im1, ax=axes[0], fraction=0.046, pad=0.04)
-
-# Log-normalized
-im2 = axes[1].imshow(X_log, cmap='YlOrRd', aspect='auto')
-axes[1].set_xticks(range(V))
-axes[1].set_yticks(range(V))
-axes[1].set_xticklabels(vocab, rotation=45, ha='right', fontsize=8)
-axes[1].set_yticklabels(vocab, fontsize=8)
-axes[1].set_title(f'Log-normalized: log(1 + X)\nmax raw={X_raw.max():.0f} -> max log={X_log.max():.4f}')
-plt.colorbar(im2, ax=axes[1], fraction=0.046, pad=0.04)
-
-plt.tight_layout()
-plot1_path = os.path.join(output_dir, "co-occurrence-matrix-heatmap.png")
-fig.savefig(plot1_path, dpi=150, bbox_inches='tight')
-plt.close()
-print(f"Saved heatmap: {plot1_path}")
-
-# --- Plot 2: 2D SVD embeddings scatter ---
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-
-# Color by cluster
-cluster_colors = {"finance": "#e74c3c", "nature": "#2ecc71", "bridge": "#95a5a6"}
-cluster_markers = {"finance": "o", "nature": "s", "bridge": "^"}
-
-for i, w in enumerate(vocab):
-    cluster = coords[w]["cluster"]
-    color = cluster_colors.get(cluster, "#333333")
-    marker = cluster_markers.get(cluster, "o")
-    ax.scatter(word_vectors[i, 0], word_vectors[i, 1], 
-               c=color, marker=marker, s=100, zorder=5, edgecolors='white', linewidth=0.5)
-    ax.annotate(w, (word_vectors[i, 0], word_vectors[i, 1]),
+    ax.annotate(w, (coords_2d[i, 0], coords_2d[i, 1]),
                 fontsize=9, ha='center', va='bottom',
-                xytext=(0, 8), textcoords='offset points')
+                xytext=(0, 5), textcoords='offset points')
 
-# Legend
-from matplotlib.lines import Line2D
-legend_elements = [
-    Line2D([0], [0], marker='o', color='w', markerfacecolor='#e74c3c', markersize=10, label='Finance'),
-    Line2D([0], [0], marker='s', color='w', markerfacecolor='#2ecc71', markersize=10, label='Nature'),
-    Line2D([0], [0], marker='^', color='w', markerfacecolor='#95a5a6', markersize=10, label='Bridge'),
+highlight_pairs = [
+    ("cat", "dog", "red"),
+    ("bank", "river", "green"),
+    ("bank", "money", "orange"),
 ]
-ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
+for w1, w2, color in highlight_pairs:
+    if w1 in word_to_idx and w2 in word_to_idx:
+        i1, i2 = word_to_idx[w1], word_to_idx[w2]
+        ax.plot([coords_2d[i1, 0], coords_2d[i2, 0]],
+                [coords_2d[i1, 1], coords_2d[i2, 1]],
+                '--', color=color, alpha=0.7, linewidth=1.5)
+        mid_x = (coords_2d[i1, 0] + coords_2d[i2, 0]) / 2
+        mid_y = (coords_2d[i1, 1] + coords_2d[i2, 1]) / 2
+        dist = np.sqrt((coords_2d[i1, 0] - coords_2d[i2, 0])**2 +
+                       (coords_2d[i1, 1] - coords_2d[i2, 1])**2)
+        ax.annotate(f"{w1}-{w2}\nd={dist:.3f}",
+                    (mid_x, mid_y), fontsize=8, color=color,
+                    ha='center', va='center',
+                    bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                              edgecolor=color, alpha=0.8))
 
-ax.set_xlabel(f'Dimension 0 (s1={s_k[0]:.4f})', fontsize=11)
-ax.set_ylabel(f'Dimension 1 (s2={s_k[1]:.4f})', fontsize=11)
-ax.set_title(f'SVD 2D Embeddings (k={K}, explained variance={explained_ratio:.1%})\nCo-occurrence + log(1+x) + truncated SVD', fontsize=12)
+ax.set_xlabel("SVD Dimension 1 (largest singular value)", fontsize=11)
+ax.set_ylabel("SVD Dimension 2 (2nd largest singular value)", fontsize=11)
+ax.set_title("CS224N L01: Co-occurrence Matrix -> SVD 2D Projection\n"
+             f"Corpus: {len(corpus)} sentences, V={V}, window={window_size}",
+             fontsize=12)
 ax.grid(True, alpha=0.3)
-ax.axhline(y=0, color='gray', linewidth=0.5, linestyle='--')
-ax.axvline(x=0, color='gray', linewidth=0.5, linestyle='--')
-
+ax.axhline(y=0, color='gray', linewidth=0.5, linestyle='-')
+ax.axvline(x=0, color='gray', linewidth=0.5, linestyle='-')
 plt.tight_layout()
-plot2_path = os.path.join(output_dir, "co-occurrence-matrix-2d-embeddings.png")
-fig.savefig(plot2_path, dpi=150, bbox_inches='tight')
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
+os.makedirs(output_dir, exist_ok=True)
+plot_path = os.path.join(output_dir, "co-occurrence-matrix-svd-2d.png")
+plt.savefig(plot_path, dpi=150, bbox_inches='tight')
 plt.close()
-print(f"Saved 2D embeddings plot: {plot2_path}")
-
-# --- Plot 3: Window size comparison ---
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-
-for idx, ws in enumerate([1, 2, 4]):
-    X_ws = build_cooccurrence(CORPUS, word2idx, V, window_size=ws)
-    X_log_ws = np.log1p(X_ws)
-    U_ws, s_ws, Vt_ws = svd(X_log_ws, full_matrices=False)
-    wv_ws = U_ws[:, :K] * s_ws[:K][np.newaxis, :]
-    explained_ws = np.sum(s_ws[:K]**2) / np.sum(s_ws**2)
-    
-    ax = axes[idx]
-    for i, w in enumerate(vocab):
-        cluster = coords[w]["cluster"]
-        color = cluster_colors.get(cluster, "#333333")
-        marker = cluster_markers.get(cluster, "o")
-        ax.scatter(wv_ws[i, 0], wv_ws[i, 1],
-                   c=color, marker=marker, s=60, zorder=5, edgecolors='white', linewidth=0.3)
-        ax.annotate(w, (wv_ws[i, 0], wv_ws[i, 1]),
-                    fontsize=7, ha='center', va='bottom',
-                    xytext=(0, 5), textcoords='offset points')
-    
-    ax.set_title(f'window={ws}\nexplained var={explained_ws:.1%}')
-    ax.grid(True, alpha=0.3)
-    ax.axhline(y=0, color='gray', linewidth=0.5, linestyle='--')
-    ax.axvline(x=0, color='gray', linewidth=0.5, linestyle='--')
-
-plt.suptitle('Effect of Window Size on SVD 2D Embeddings', fontsize=13, y=1.02)
-plt.tight_layout()
-plot3_path = os.path.join(output_dir, "co-occurrence-matrix-window-comparison.png")
-fig.savefig(plot3_path, dpi=150, bbox_inches='tight')
-plt.close()
-print(f"Saved window comparison plot: {plot3_path}")
-
+print(f"Plot saved: {plot_path}")
 print()
-print("=" * 70)
-print("DONE -- All outputs saved to Labs/L01-word-vectors/outputs/")
-print("=" * 70)
+
+# ============================================================
+# 第 6 步：对比不同窗口大小
+# ============================================================
+print("Window size comparison:")
+print("  Larger window -> more semantic/topic; smaller -> more syntactic")
+print()
+for ws in [1, 2, 3]:
+    M = build_cooccurrence_matrix(corpus, word_to_idx, ws)
+    nnz_ws = np.count_nonzero(M)
+    print(f"  window={ws}: non-zero {nnz_ws}/{V*V} = {nnz_ws/(V*V):.1%}, sum={M.sum()}")
+print()
+
+cooc_w2 = build_cooccurrence_matrix(corpus, word_to_idx, window_size=2)
+print(f"Co-occurrence matrix (window=2)")
+header2 = "       " + "".join(f"{abbreviate(w):>7}" for w in vocab)
+print(header2)
+for i, w in enumerate(vocab):
+    row = f"{abbreviate(w):>6} " + "".join(f"{cooc_w2[i][j]:>7}" for j in range(V))
+    print(row)
+print()
+
+U2, S2, Vt2 = np.linalg.svd(cooc_w2.astype(float))
+coords_w2 = U2[:, :k] * S2[:k]
+
+print("2D coordinates (window=2):")
+print(f"  {'word':>10}  {'x':>8}  {'y':>8}")
+print(f"  {'-'*10}  {'-'*8}  {'-'*8}")
+for i, w in enumerate(vocab):
+    print(f"  {w:>10}  {coords_w2[i, 0]:>8.4f}  {coords_w2[i, 1]:>8.4f}")
+print()
+
+# Window 2 plot
+fig2, ax2 = plt.subplots(1, 1, figsize=(10, 7))
+ax2.scatter(coords_w2[:, 0], coords_w2[:, 1], c='darkgreen', s=60, zorder=5)
+for i, w in enumerate(vocab):
+    ax2.annotate(w, (coords_w2[i, 0], coords_w2[i, 1]),
+                 fontsize=9, ha='center', va='bottom',
+                 xytext=(0, 5), textcoords='offset points')
+for w1, w2, color in highlight_pairs:
+    if w1 in word_to_idx and w2 in word_to_idx:
+        i1, i2 = word_to_idx[w1], word_to_idx[w2]
+        ax2.plot([coords_w2[i1, 0], coords_w2[i2, 0]],
+                 [coords_w2[i1, 1], coords_w2[i2, 1]],
+                 '--', color=color, alpha=0.7, linewidth=1.5)
+        mid_x = (coords_w2[i1, 0] + coords_w2[i2, 0]) / 2
+        mid_y = (coords_w2[i1, 1] + coords_w2[i2, 1]) / 2
+        dist = np.sqrt((coords_w2[i1, 0] - coords_w2[i2, 0])**2 +
+                       (coords_w2[i1, 1] - coords_w2[i2, 1])**2)
+        ax2.annotate(f"{w1}-{w2}\nd={dist:.3f}",
+                     (mid_x, mid_y), fontsize=8, color=color,
+                     ha='center', va='center',
+                     bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                               edgecolor=color, alpha=0.8))
+ax2.set_xlabel("SVD Dimension 1", fontsize=11)
+ax2.set_ylabel("SVD Dimension 2", fontsize=11)
+ax2.set_title("CS224N L01: Co-occurrence Matrix -> SVD 2D Projection (window=2)\n"
+              f"Corpus: {len(corpus)} sentences, V={V}, window=2",
+              fontsize=12)
+ax2.grid(True, alpha=0.3)
+ax2.axhline(y=0, color='gray', linewidth=0.5, linestyle='-')
+ax2.axvline(x=0, color='gray', linewidth=0.5, linestyle='-')
+plt.tight_layout()
+plot_w2_path = os.path.join(output_dir, "co-occurrence-matrix-svd-2d-window2.png")
+plt.savefig(plot_w2_path, dpi=150, bbox_inches='tight')
+plt.close()
+print(f"Plot saved: {plot_w2_path}")
+print()
+
+# ============================================================
+# 第 7 步：距离对比
+# ============================================================
+print("Distance comparison (Euclidean in 2D SVD space):")
+print(f"  {'pair':>15}  {'window=1':>10}  {'window=2':>10}")
+print(f"  {'-'*15}  {'-'*10}  {'-'*10}")
+for w1, w2, _ in highlight_pairs:
+    if w1 in word_to_idx and w2 in word_to_idx:
+        i1, i2 = word_to_idx[w1], word_to_idx[w2]
+        d1 = np.sqrt(np.sum((coords_2d[i1] - coords_2d[i2])**2))
+        d2 = np.sqrt(np.sum((coords_w2[i1] - coords_w2[i2])**2))
+        print(f"  {w1+'-'+w2:>15}  {d1:>10.4f}  {d2:>10.4f}")
+w1, w2 = "cat", "money"
+i1, i2 = word_to_idx[w1], word_to_idx[w2]
+d1 = np.sqrt(np.sum((coords_2d[i1] - coords_2d[i2])**2))
+d2 = np.sqrt(np.sum((coords_w2[i1] - coords_w2[i2])**2))
+print(f"  {w1+'-'+w2:>15}  {d1:>10.4f}  {d2:>10.4f}")
+print()
+
+# ============================================================
+# 第 8 步：JSON 摘要
+# ============================================================
+summary = {
+    "corpus_size": len(corpus),
+    "vocab_size": V,
+    "vocab": vocab,
+    "window_1": {
+        "window_size": 1,
+        "nonzero": int(nnz),
+        "total": int(total),
+        "sparsity": round(float(sparsity), 4),
+        "singular_values_k2": [round(float(s), 6) for s in S[:k]],
+        "coords_2d": {w: [round(float(coords_2d[i, 0]), 6),
+                           round(float(coords_2d[i, 1]), 6)]
+                      for i, w in enumerate(vocab)},
+        "distances": {}
+    },
+    "window_2": {
+        "window_size": 2,
+        "nonzero": int(np.count_nonzero(cooc_w2)),
+        "total": int(total),
+        "singular_values_k2": [round(float(s), 6) for s in S2[:k]],
+        "coords_2d": {w: [round(float(coords_w2[i, 0]), 6),
+                           round(float(coords_w2[i, 1]), 6)]
+                      for i, w in enumerate(vocab)},
+        "distances": {}
+    }
+}
+for w1, w2, _ in highlight_pairs:
+    if w1 in word_to_idx and w2 in word_to_idx:
+        i1, i2 = word_to_idx[w1], word_to_idx[w2]
+        d1 = float(np.sqrt(np.sum((coords_2d[i1] - coords_2d[i2])**2)))
+        d2 = float(np.sqrt(np.sum((coords_w2[i1] - coords_w2[i2])**2)))
+        key = f"{w1}-{w2}"
+        summary["window_1"]["distances"][key] = round(d1, 6)
+        summary["window_2"]["distances"][key] = round(d2, 6)
+w1, w2 = "cat", "money"
+i1, i2 = word_to_idx[w1], word_to_idx[w2]
+d1 = float(np.sqrt(np.sum((coords_2d[i1] - coords_2d[i2])**2)))
+d2 = float(np.sqrt(np.sum((coords_w2[i1] - coords_w2[i2])**2)))
+summary["window_1"]["distances"][f"{w1}-{w2}"] = round(d1, 6)
+summary["window_2"]["distances"][f"{w1}-{w2}"] = round(d2, 6)
+
+summary_path = os.path.join(output_dir, "co-occurrence-matrix-summary.json")
+with open(summary_path, 'w') as f:
+    json.dump(summary, f, indent=2, ensure_ascii=False)
+print(f"Summary saved: {summary_path}")
+print()
+print("Done. Exit 0.")
