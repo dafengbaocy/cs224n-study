@@ -242,3 +242,17 @@ outputs: Labs/L01-word-vectors/outputs/negative-sampling-loss-comparison.png, La
 notebook: Labs/L01-word-vectors/negative-sampling-loss.ipynb
 notebook_execution: jupyter execute --inplace (all 7 code cells executed, outputs verified)
 note: rework run 4/5 — re-executed .py and notebook to verify outputs are still correct and consistent. All 26 numeric values verified against stdout. check_links_headings.py passes (0 errors). No changes to capsule partial or outputs needed.
+
+## run_id 20260610T112330Z__t_48b9a9f8__cosine-similarity-analogy
+
+task_id: t_48b9a9f8
+capsule_slug: cosine-similarity-analogy
+timestamp: 2026-06-10T11:23:30Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/cosine-similarity-analogy.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
+notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
+note: rework 1/5 — added 5 required Chinese teaching sections to notebook (这段代码在看什么, 运行后先看哪里, 输出怎么解释, 和本讲哪个 waypoint 对应, 容易误解的地方); re-executed script and notebook; all outputs regenerated
