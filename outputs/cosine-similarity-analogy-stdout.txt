@@ -1,0 +1,113 @@
+======================================================================
+Part 1: 余弦相似度 (Cosine Similarity) 基础计算
+======================================================================
+
+Toy 词向量 (6维手工设计):
+维度含义: [royalty, gender_male, gender_female, age_old, age_young, animal]
+  king       = [0.9 0.8 0.1 0.7 0.1 0. ]
+  queen      = [0.9 0.1 0.8 0.7 0.1 0. ]
+  man        = [0.1 0.9 0.  0.5 0.5 0. ]
+  woman      = [0.1 0.  0.9 0.5 0.5 0. ]
+  boy        = [0.  0.8 0.  0.  0.9 0. ]
+  girl       = [0.  0.  0.8 0.  0.9 0. ]
+  dog        = [0.  0.  0.  0.3 0.7 0.9]
+  cat        = [0.  0.  0.  0.3 0.7 0.9]
+  prince     = [0.8 0.7 0.1 0.1 0.8 0. ]
+  princess   = [0.8 0.1 0.7 0.1 0.8 0. ]
+
+--- 词对余弦相似度 ---
+  cos(king      , queen     ) = 0.7500
+  cos(king      , man       ) = 0.7523
+  cos(king      , woman     ) = 0.3606
+  cos(man       , woman     ) = 0.3864
+  cos(king      , dog       ) = 0.1696
+  cos(dog       , cat       ) = 1.0000
+  cos(boy       , girl      ) = 0.5586
+  cos(prince    , princess  ) = 0.7989
+
+[解读] cos 值范围 [-1, 1]:
+  1.0 = 完全相同方向 (语义完全一致)
+  0.0 = 正交 (语义无关)
+ -1.0 = 完全相反方向
+  king-queen 高相似度 → 共享 'royalty' 维度
+  king-dog 低相似度 → 语义距离远
+
+======================================================================
+Part 2: 词类比算术 (Word Analogy)
+======================================================================
+
+--- 经典类比: king - man + woman = ? ---
+  结果向量: [-0.7  0.1  0.8  0.3  0.9  0. ]
+  最接近的词:
+    #1: girl        cos_sim = 0.8431
+    #2: boy         cos_sim = 0.5175
+    #3: dog         cos_sim = 0.4276
+    #4: cat         cos_sim = 0.4276
+    #5: princess    cos_sim = 0.3977
+    #6: prince      cos_sim = 0.1779
+    #7: queen       cos_sim = 0.1600 ← 正确答案!
+
+--- 更多类比测试 ---
+  ✗ king - man + woman = girl (expected: queen, sim=0.8431)
+  ✗ prince - man + woman = girl (expected: princess, sim=0.4953)
+  ✓ man - woman + king = queen (expected: queen, sim=0.9848)
+  ✓ king - queen + man = woman (expected: woman, sim=0.9730)
+  ✓ boy - girl + man = woman (expected: woman, sim=0.9940)
+
+======================================================================
+Part 3: 类比失败案例 (Analogy Failures)
+======================================================================
+
+--- 失败案例 1: 跨语义域的类比 ---
+  dog - cat + king = ?
+  结果向量: [0.9 0.8 0.1 0.7 0.1 0. ]
+  Top-3 预测:
+    prince      cos_sim = 0.7688
+    man         cos_sim = 0.7523
+    queen       cos_sim = 0.7500
+  [解读] 动物域的 '对应关系' 不能简单迁移到皇室域
+
+--- 失败案例 2: 无对应关系的词 ---
+  dog - king + man = ?
+  结果向量: [ 1.   1.7  0.1  0.9 -0.1 -0.9]
+  Top-3 预测:
+    prince      cos_sim = 0.6389
+    queen       cos_sim = 0.5376
+    boy         cos_sim = 0.4485
+  [解读] 当 a→b 没有清晰语义关系时，类比结果无意义
+
+======================================================================
+Part 4: 几何直觉 — 向量关系可视化数据
+======================================================================
+
+2D 投影 (维度 0: royalty, 维度 1: gender_male):
+  word         royalty  gender_M
+  king          0.9000    0.8000
+  queen         0.9000    0.1000
+  man           0.1000    0.9000
+  woman         0.1000    0.0000
+  boy           0.0000    0.8000
+  girl          0.0000    0.0000
+  dog           0.0000    0.0000
+  cat           0.0000    0.0000
+  prince        0.8000    0.7000
+  princess      0.8000    0.1000
+
+类比向量算术几何解释:
+  king - man = 去掉 '男性' 成分，保留 '皇室' 成分
+    king - man = [ 0.8 -0.1  0.1  0.2 -0.4  0. ]
+  (king - man) + woman = 皇室成分 + '女性' 成分 ≈ queen
+    result = [ 0.9 -0.1  1.   0.7  0.1  0. ]
+    queen  = [0.9 0.1 0.8 0.7 0.1 0. ]
+    cos(result, queen) = 0.9848
+
+======================================================================
+Part 5: 生成可视化图表
+======================================================================
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png
+  Saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
+
+======================================================================
+All outputs generated successfully.
+======================================================================

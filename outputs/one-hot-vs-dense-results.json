@@ -1,0 +1,25 @@
+{
+  "capsule": "one-hot-vs-dense",
+  "vocab": [
+    "hotel",
+    "motel",
+    "book",
+    "Seattle",
+    "Seattle_motel"
+  ],
+  "vocab_size": 5,
+  "embed_dim": 3,
+  "one_hot_cosine": {
+    "hotel_motel": 0.0,
+    "hotel_book": 0.0,
+    "hotel_Seattle": 0.0,
+    "motel_book": 0.0
+  },
+  "dense_cosine": {
+    "hotel_motel": 0.9865970698452157,
+    "hotel_book": 0.27129470652201143,
+    "hotel_Seattle": 0.4337619519676258,
+    "motel_book": 0.3659761266023688
+  },
+  "key_finding": "All one-hot pairwise cosine similarities are 0.0; dense vectors encode meaningful similarity."
+}

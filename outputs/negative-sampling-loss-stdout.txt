@@ -1,0 +1,147 @@
+======================================================================
+CS224N L01 Code Capsule: negative-sampling-loss (WP05)
+======================================================================
+
+[Setup]
+  Vocabulary size |V| = 12
+  Vector dimension d = 4
+  Center word: 'king' (idx=0)
+  Context word: 'queen' (idx=1)
+  v_center shape: (12, 4)
+  U_context shape: (12, 4)
+
+======================================================================
+[Part 1] Softmax Loss — requires partition function over ALL words
+======================================================================
+
+  Scores u_w^T v_c for all w in V:
+        king: +0.0004
+       queen: +0.0167 <-- positive pair (king, queen)
+         man: +0.0133
+       woman: -0.0275
+      prince: +0.0170
+    princess: +0.0285
+         dog: -0.0068
+         cat: -0.0288
+        fish: +0.0001
+        bird: +0.0076
+         car: +0.0120
+        tree: -0.0279
+
+  Softmax probabilities P(o|c) = exp(u_o^T v_c) / Z:
+    P(    king|king) = 0.083319
+    P(   queen|king) = 0.084686 <-- P(queen|king)
+    P(     man|king) = 0.084400
+    P(   woman|king) = 0.081028
+    P(  prince|king) = 0.084714
+    P(princess|king) = 0.085692
+    P(     dog|king) = 0.082724
+    P(     cat|king) = 0.080921
+    P(    fish|king) = 0.083296
+    P(    bird|king) = 0.083924
+    P(     car|king) = 0.084297
+    P(    tree|king) = 0.080999
+
+  Softmax loss = -log P(queen|king) = -log(0.084686) = 2.468800
+  Partition function Z = Σ_w exp(u_w^T v_c) = 11.669741
+  Terms computed: 12 (ALL vocabulary words)
+
+======================================================================
+[Part 2] Negative Sampling Loss — only k+1 terms needed
+======================================================================
+
+  k = 2:
+    Positive term: log σ(u_queen^T v_king) = log σ(+0.0167) = -0.684855
+    Negative terms (2 sampled):
+      log σ(-u_    tree^T v_king) = log σ(+0.0279) = -0.679312
+      log σ(-u_    fish^T v_king) = log σ(-0.0001) = -0.693194
+    NS objective = -2.057362
+    NS loss (for minimization) = 2.057362
+    Terms computed: 3 (1 positive + 2 negative)
+
+  k = 5:
+    Positive term: log σ(u_queen^T v_king) = log σ(+0.0167) = -0.684855
+    Negative terms (5 sampled):
+      log σ(-u_    bird^T v_king) = log σ(-0.0076) = -0.696961
+      log σ(-u_     man^T v_king) = log σ(-0.0133) = -0.699800
+      log σ(-u_princess^T v_king) = log σ(-0.0285) = -0.707475
+      log σ(-u_  prince^T v_king) = log σ(-0.0170) = -0.701672
+      log σ(-u_    king^T v_king) = log σ(-0.0004) = -0.693336
+    NS objective = -4.184101
+    NS loss (for minimization) = 4.184101
+    Terms computed: 6 (1 positive + 5 negative)
+
+  k = 10:
+    Positive term: log σ(u_queen^T v_king) = log σ(+0.0167) = -0.684855
+    Negative terms (10 sampled):
+      log σ(-u_     cat^T v_king) = log σ(+0.0288) = -0.678836
+      log σ(-u_princess^T v_king) = log σ(-0.0285) = -0.707475
+      log σ(-u_    fish^T v_king) = log σ(-0.0001) = -0.693194
+      log σ(-u_    tree^T v_king) = log σ(+0.0279) = -0.679312
+      log σ(-u_   woman^T v_king) = log σ(+0.0275) = -0.679488
+      log σ(-u_     man^T v_king) = log σ(-0.0133) = -0.699800
+      log σ(-u_     dog^T v_king) = log σ(+0.0068) = -0.689757
+      log σ(-u_    bird^T v_king) = log σ(-0.0076) = -0.696961
+      log σ(-u_  prince^T v_king) = log σ(-0.0170) = -0.701672
+      log σ(-u_     car^T v_king) = log σ(-0.0120) = -0.699186
+    NS objective = -7.610537
+    NS loss (for minimization) = 7.610537
+    Terms computed: 11 (1 positive + 10 negative)
+
+  k = 20:
+    Positive term: log σ(u_queen^T v_king) = log σ(+0.0167) = -0.684855
+    Negative terms (20 sampled):
+      log σ(-u_    fish^T v_king) = log σ(-0.0001) = -0.693194
+      log σ(-u_    king^T v_king) = log σ(-0.0004) = -0.693336
+      log σ(-u_    tree^T v_king) = log σ(+0.0279) = -0.679312
+      log σ(-u_    king^T v_king) = log σ(-0.0004) = -0.693336
+      log σ(-u_     man^T v_king) = log σ(-0.0133) = -0.699800
+      log σ(-u_     man^T v_king) = log σ(-0.0133) = -0.699800
+      log σ(-u_     dog^T v_king) = log σ(+0.0068) = -0.689757
+      log σ(-u_     cat^T v_king) = log σ(+0.0288) = -0.678836
+      log σ(-u_princess^T v_king) = log σ(-0.0285) = -0.707475
+      log σ(-u_    king^T v_king) = log σ(-0.0004) = -0.693336
+      log σ(-u_    king^T v_king) = log σ(-0.0004) = -0.693336
+    NS objective = -8.306377
+    NS loss (for minimization) = 8.306377
+    Terms computed: 21 (1 positive + 20 negative)
+
+======================================================================
+[Part 3] Direct comparison — same (king, queen) pair
+======================================================================
+
+  Softmax loss:  2.468800  (uses all 12 words)
+  NS loss (k=5): 4.165580  (uses 6 words)
+
+  Key insight: NS loss is NOT the same value as softmax loss.
+  But both gradients push v_king toward u_queen and away from negatives.
+  On average over many steps, NS approximates the softmax gradient.
+
+======================================================================
+[Part 4] Gradient comparison — direction of update to v_c
+======================================================================
+
+  Softmax gradient ∂L/∂v_c (observed - expected):
+    = u_queen - Σ_w P(w|king) * u_w
+    = [ 0.04547986 -0.05787004 -0.09864437 -0.08275922]
+    norm = 0.148314
+
+  NS gradient ∂J/∂v_c (k=5):
+    = (σ(u_queen^T v_king) - 1) * u_queen + Σ σ(u_neg^T v_king) * u_neg
+    = [ 0.01573958 -0.08057307 -0.0272866   0.04410276]
+    norm = 0.097105
+
+  Cosine similarity between softmax grad and NS grad: 0.3069
+  (Not identical — but both point roughly in the 'toward queen, away from negatives' direction)
+
+======================================================================
+[Part 5] Efficiency — computation time scaling
+======================================================================
+
+  Dimension d = 300, trials per size = 50
+         |V| |   Softmax (ms) |    NS k=5 (ms) |    Speedup
+  ---------- | -------------- | -------------- | ----------
+         100 |         0.0233 |         0.0313 |        0.7x
+       1,000 |         0.0587 |         0.0206 |        2.9x
+      10,000 |         3.3217 |         0.0390 |       85.1x
+      50,000 |         5.0783 |         0.0236 |      215.6x

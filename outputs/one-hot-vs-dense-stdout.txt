@@ -1,0 +1,114 @@
+============================================================
+Part 1: One-hot Vectors
+============================================================
+
+Vocabulary (5 words): ['hotel', 'motel', 'book', 'Seattle', 'Seattle_motel']
+Each one-hot vector has dimension = vocab_size = 5
+
+  hotel           → [1.0, 0.0, 0.0, 0.0, 0.0]
+  motel           → [0.0, 1.0, 0.0, 0.0, 0.0]
+  book            → [0.0, 0.0, 1.0, 0.0, 0.0]
+  Seattle         → [0.0, 0.0, 0.0, 1.0, 0.0]
+  Seattle_motel   → [0.0, 0.0, 0.0, 0.0, 1.0]
+
+One-hot matrix shape: (5, 5)
+Non-zero entries per vector: 1
+Sparsity: 80.0% zeros
+
+============================================================
+Part 2: Pairwise Dot Products (One-hot)
+============================================================
+
+Key question: How similar is 'hotel' to 'motel'?
+Under one-hot: dot(e_hotel, e_motel) = ?
+
+Dot product matrix (one-hot):
+                         hotel          motel           book        Seattle  Seattle_motel
+hotel                      1.0            0.0            0.0            0.0            0.0
+motel                      0.0            1.0            0.0            0.0            0.0
+book                       0.0            0.0            1.0            0.0            0.0
+Seattle                    0.0            0.0            0.0            1.0            0.0
+Seattle_motel              0.0            0.0            0.0            0.0            1.0
+
+⚠️  dot(hotel, motel) = 0.0
+⚠️  ALL off-diagonal dot products = 0.0
+    → One-hot vectors are ALL mutually orthogonal!
+    → The model cannot tell 'hotel' and 'motel' apart at all.
+
+Cosine similarity matrix (one-hot):
+                         hotel          motel           book        Seattle  Seattle_motel
+hotel                      1.0            0.0            0.0            0.0            0.0
+motel                      0.0            1.0            0.0            0.0            0.0
+book                       0.0            0.0            1.0            0.0            0.0
+Seattle                    0.0            0.0            0.0            1.0            0.0
+Seattle_motel              0.0            0.0            0.0            0.0            1.0
+
+⚠️  cos(hotel, motel) = 0.0
+    → No natural notion of similarity (Slides p20)
+
+============================================================
+Part 3: Dense Word Vectors (illustrative, dim=3)
+============================================================
+
+In reality, dense vectors are learned from data (Word2Vec, etc.)
+Here we use hand-crafted 3D vectors to show the IDEA:
+  - Similar words → similar vectors → high dot product / cosine
+
+Dense embedding dimension: 3
+(Real models: 50-300+ dimensions)
+
+  hotel           → [0.9, 0.1, 0.2]
+  motel           → [0.8, 0.2, 0.1]
+  book            → [0.1, 0.9, 0.3]
+  Seattle         → [0.2, 0.3, 0.9]
+  Seattle_motel   → [0.5, 0.2, 0.6]
+
+Dot product matrix (dense):
+                         hotel          motel           book        Seattle  Seattle_motel
+hotel                    0.860          0.760          0.240          0.390          0.590
+motel                    0.760          0.690          0.290          0.310          0.500
+book                     0.240          0.290          0.910          0.560          0.410
+Seattle                  0.390          0.310          0.560          0.940          0.700
+Seattle_motel            0.590          0.500          0.410          0.700          0.650
+
+Cosine similarity matrix (dense):
+                         hotel          motel           book        Seattle  Seattle_motel
+hotel                    1.000          0.987          0.271          0.434          0.789
+motel                    0.987          1.000          0.366          0.385          0.747
+book                     0.271          0.366          1.000          0.605          0.533
+Seattle                  0.434          0.385          0.605          1.000          0.896
+Seattle_motel            0.789          0.747          0.533          0.896          1.000
+
+✅ cos(hotel, motel) = 0.987  (HIGH — similar words)
+✅ cos(hotel, book)  = 0.271  (LOW  — different words)
+
+   Dense vectors CAN distinguish similar from dissimilar words!
+
+============================================================
+Part 4: Summary Comparison
+============================================================
+
+Pair                            One-hot cos    Dense cos
+--------------------------------------------------------
+hotel ↔ motel                           0.0        0.987
+hotel ↔ book                            0.0        0.271
+hotel ↔ Seattle                         0.0        0.434
+motel ↔ book                            0.0        0.366
+
+Vocabulary size                           5            5
+Vector dimension                          5            3
+Sparsity                             100.0%         0.0%
+Storage per word (floats)                 5            3
+
+============================================================
+Takeaway (Slides p21-22):
+  'We will build a dense vector for each word'
+  → Low-dimensional, learned from data, encodes similarity
+  → This is the foundation of Word2Vec (next capsule)
+============================================================
+
+Results saved to Labs/L01-word-vectors/outputs/one-hot-vs-dense-results.json
+Plot saved to Labs/L01-word-vectors/outputs/one-hot-vs-dense-similarity-heatmap.png
+Plot saved to Labs/L01-word-vectors/outputs/one-hot-vs-dense-2d-projection.png
+
+✅ All outputs generated successfully.
