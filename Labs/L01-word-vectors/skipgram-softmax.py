@@ -1,344 +1,308 @@
 #!/usr/bin/env python3
 """
-CS224N L01 Word Vectors — Code Capsule: skipgram-softmax
-Waypoint WP03: Skip-gram softmax probability calculation P(o|c)
+CS224N L01 Word Vectors — Code Capsule: skipgram-softmax (WP03)
+
+Demonstrates Skip-gram softmax probability calculation P(o|c).
 
 Official anchors:
   - Slides p27-30 (objective function, softmax)
   - Notes §3.2 (Eq.4 softmax, Eq.5 cross-entropy loss)
 
-What this capsule demonstrates:
-  1. Each word has TWO vectors: v_w (center) and u_w (context)
-  2. Softmax formula: P(o|c) = exp(u_o^T v_c) / Σ_{w∈V} exp(u_w^T v_c)
-  3. The three steps: dot product → exponentiation → normalization
-  4. The computational bottleneck: denominator sums over ALL |V| words
+Key formula (Notes Eq.4 / Slides p28):
+  P(o|c) = exp(u_o^T v_c) / Σ_{w∈V} exp(u_w^T v_c)
 
-This script uses numpy and matplotlib, both pre-installed in Google Colab.
+This script:
+  1. Defines a mini vocabulary with hand-crafted vectors
+  2. Computes dot products between center word v_c and all context vectors u_w
+  3. Applies softmax to get P(o|c) for every word in vocabulary
+  4. Visualizes the probability distribution
+  5. Demonstrates the computational cost of the denominator (partition function)
 """
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # non-interactive backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import json
 import os
 import sys
+import json
+from datetime import datetime, timezone
 
-# ============================================================
-# 1. Setup: Mini vocabulary with d=4 dimensional vectors
-# ============================================================
-print("=" * 70)
-print("CS224N L01 Code Capsule: skipgram-softmax")
-print("Waypoint WP03: Skip-gram softmax probability P(o|c)")
-print("=" * 70)
+# ─── Reproducibility ─────────────────────────────────────────────
+np.random.seed(42)
 
-np.random.seed(42)  # reproducibility
+# ─── Mini Vocabulary ─────────────────────────────────────────────
+# A small vocabulary around finance/banking theme
+# This mirrors the Slides p25 example where "banking" is the center word
+VOCAB = [
+    "banking",      # 0 - center word in our example
+    "crises",       # 1
+    "into",         # 2
+    "turning",      # 3
+    "problems",     # 4
+    "money",        # 5
+    "economy",      # 6
+    "policy",       # 7
+    "cat",          # 8 - unrelated word (should get low P)
+    "dog",          # 9 - unrelated word (should get low P)
+]
 
-# Mini vocabulary (6 words — small enough to trace by hand)
-vocab = ["banking", "money", "river", "bank", "crisis", "water"]
-V = len(vocab)
-d = 4  # embedding dimension (toy example; real models use d=100-300)
+VOCAB_SIZE = len(VOCAB)
+DIM = 4  # Small dimension for transparency
 
-print(f"\nVocabulary size |V| = {V}")
-print(f"Embedding dimension d = {d}")
-print(f"Words: {vocab}")
+# ─── Word Vectors ────────────────────────────────────────────────
+# Center word vectors (v) and context word vectors (u)
+# In real word2vec, these are learned; here we craft them to show the concept.
+# Finance-related words are clustered; unrelated words are far away.
 
-# Each word has TWO vectors:
-#   v_w = center vector (when word is the center/input word)
-#   u_w = context vector (when word is the context/output word)
-# In real word2vec, these are separate parameter matrices.
-
-# Center vectors V_matrix: each row is v_w for one word
-V_matrix = np.array([
-    [ 0.5,  0.8, -0.2,  0.3],   # banking
-    [ 0.4,  0.7, -0.1,  0.2],   # money
-    [-0.3,  0.1,  0.9,  0.6],   # river
-    [ 0.2,  0.5,  0.4,  0.5],   # bank
-    [-0.5,  0.6, -0.3,  0.1],   # crisis
-    [-0.2,  0.0,  0.8,  0.7],   # water
+# Center vectors V (each row = v_w for word w when it's the center word)
+V = np.array([
+    [ 0.8,  0.6, -0.3,  0.1],   # banking
+    [ 0.5,  0.7, -0.5,  0.2],   # crises
+    [ 0.3,  0.2,  0.8, -0.1],   # into
+    [ 0.4,  0.3,  0.6,  0.3],   # turning
+    [ 0.6,  0.8, -0.4,  0.1],   # problems
+    [ 0.7,  0.5, -0.2,  0.3],   # money
+    [ 0.9,  0.4, -0.1,  0.2],   # economy
+    [ 0.6,  0.3,  0.1,  0.4],   # policy
+    [-0.8, -0.7,  0.5, -0.3],   # cat (unrelated)
+    [-0.7, -0.9,  0.4, -0.2],   # dog (unrelated)
 ], dtype=np.float64)
 
-# Context vectors U_matrix: each row is u_w for one word
-U_matrix = np.array([
-    [ 0.6,  0.7, -0.3,  0.2],   # banking
-    [ 0.5,  0.8, -0.2,  0.1],   # money
-    [-0.4,  0.2,  0.8,  0.5],   # river
-    [ 0.3,  0.6,  0.3,  0.4],   # bank
-    [-0.6,  0.5, -0.4,  0.0],   # crisis
-    [-0.3,  0.1,  0.7,  0.6],   # water
+# Context vectors U (each row = u_w for word w when it's a context word)
+# These are DIFFERENT from V — each word has TWO vectors (Slides p28)
+U = np.array([
+    [ 0.7,  0.5, -0.2,  0.2],   # banking (as context)
+    [ 0.6,  0.8, -0.6,  0.1],   # crises (as context)
+    [ 0.2,  0.1,  0.7, -0.2],   # into (as context)
+    [ 0.3,  0.4,  0.5,  0.2],   # turning (as context)
+    [ 0.5,  0.9, -0.3,  0.0],   # problems (as context)
+    [ 0.8,  0.4, -0.1,  0.3],   # money (as context)
+    [ 0.9,  0.3,  0.0,  0.1],   # economy (as context)
+    [ 0.5,  0.2,  0.2,  0.5],   # policy (as context)
+    [-0.9, -0.6,  0.4, -0.4],   # cat (as context, unrelated)
+    [-0.6, -0.8,  0.3, -0.1],   # dog (as context, unrelated)
 ], dtype=np.float64)
 
-print("\n--- Center vectors (v_w) ---")
-for i, w in enumerate(vocab):
-    print(f"  v_{w:>8s} = {V_matrix[i]}")
+# ─── Softmax Function ────────────────────────────────────────────
+def softmax(scores):
+    """
+    Softmax: R^n -> (0,1)^n
+    Slides p30: ① Dot product → ② Exponentiation → ③ Normalize
+    
+    Numerically stable version: subtract max before exp.
+    """
+    scores = scores - np.max(scores)  # numerical stability
+    exp_scores = np.exp(scores)
+    return exp_scores / np.sum(exp_scores)
 
-print("\n--- Context vectors (u_w) ---")
-for i, w in enumerate(vocab):
-    print(f"  u_{w:>8s} = {U_matrix[i]}")
+# ─── Compute P(o|c) ─────────────────────────────────────────────
+# Pick "banking" as center word (index 0)
+center_idx = 0
+center_word = VOCAB[center_idx]
+v_c = V[center_idx]  # center vector for "banking"
 
-# ============================================================
-# 2. Softmax P(o|c) computation — step by step
-# ============================================================
-print("\n" + "=" * 70)
-print("STEP-BY-STEP: Computing P(o|c) for center word 'banking'")
 print("=" * 70)
+print("CS224N L01 — Code Capsule: skipgram-softmax (WP03)")
+print("=" * 70)
+print()
+print(f"Center word: '{center_word}' (index {center_idx})")
+print(f"Center vector v_{center_word} = {v_c}")
+print(f"Vocabulary size |V| = {VOCAB_SIZE}")
+print(f"Vector dimension d = {DIM}")
+print()
 
-center_idx = 0  # "banking"
-v_c = V_matrix[center_idx]
-center_word = vocab[center_idx]
-
-print(f"\nCenter word c = '{center_word}'")
-print(f"v_c = {v_c}")
-
-# Step 1: Dot products u_w^T v_c for ALL words w in vocabulary
-print("\n--- Step 1: Dot products (u_w^T · v_c) for all w ∈ V ---")
-dot_products = np.zeros(V)
-for i, w in enumerate(vocab):
-    u_w = U_matrix[i]
+# Step 1: Compute dot products u_w^T v_c for ALL words w in V
+print("─" * 70)
+print("Step 1: Dot products u_w^T v_c (Slides p30: ① Dot product)")
+print("─" * 70)
+dot_products = np.zeros(VOCAB_SIZE)
+for i, word in enumerate(VOCAB):
+    u_w = U[i]
     dot = np.dot(u_w, v_c)
     dot_products[i] = dot
-    print(f"  u_{w:>8s}^T · v_{center_word} = {dot:.6f}")
+    print(f"  u_{word:>10s}^T v_{center_word:<8s} = {dot:+.6f}")
 
-# Step 2: Exponentiation exp(u_w^T v_c)
-print("\n--- Step 2: Exponentiation exp(u_w^T · v_c) ---")
+print()
+
+# Step 2: Exponentiate (Slides p30: ② Exponentiation)
+print("─" * 70)
+print("Step 2: Exponentiation exp(u_w^T v_c) (Slides p30: ② Exponentiation)")
+print("─" * 70)
 exp_scores = np.exp(dot_products)
-for i, w in enumerate(vocab):
-    print(f"  exp({dot_products[i]:.6f}) = {exp_scores[i]:.6f}")
+for i, word in enumerate(VOCAB):
+    print(f"  exp({dot_products[i]:+.6f}) = {exp_scores[i]:.6f}")
 
-# Step 3: Normalization — divide each exp by the sum (partition function Z)
-Z = np.sum(exp_scores)  # partition function = denominator
-print(f"\n--- Step 3: Normalization ---")
-print(f"  Partition function Z = Σ exp(u_w^T · v_c) = {Z:.6f}")
-print(f"  (This sum requires iterating over ALL |V|={V} words!)")
+print()
 
-probs = exp_scores / Z
-print(f"\n--- Final: P(o|c='{center_word}') for each context word o ---")
-for i, w in enumerate(vocab):
+# Step 3: Normalize — THE PARTITION FUNCTION (Slides p30: ③ Normalize)
+print("─" * 70)
+print("Step 3: Partition function Z = Σ exp(u_w^T v_c) (Slides p30: ③ Normalize)")
+print("─" * 70)
+partition = np.sum(exp_scores)
+print(f"  Z = Σ_{{w∈V}} exp(u_w^T v_c) = {partition:.6f}")
+print(f"  (We had to compute exp for ALL {VOCAB_SIZE} words!)")
+print()
+
+# Step 4: Final probabilities P(o|c)
+print("─" * 70)
+print("Step 4: P(o|c) = exp(u_o^T v_c) / Z")
+print("─" * 70)
+probs = softmax(dot_products)
+print()
+print(f"  {'Word':>12s}  {'dot product':>12s}  {'exp(score)':>12s}  {'P(o|c)':>10s}  {'bar'}")
+print(f"  {'─'*12}  {'─'*12}  {'─'*12}  {'─'*10}  {'─'*20}")
+for i, word in enumerate(VOCAB):
     bar = "█" * int(probs[i] * 50)
-    print(f"  P({w:>8s} | {center_word}) = {probs[i]:.6f}  {bar}")
+    marker = " ← context" if i in [1, 2, 3, 4] else ""
+    print(f"  {word:>12s}  {dot_products[i]:>+12.6f}  {exp_scores[i]:>12.6f}  {probs[i]:>10.6f}  {bar}{marker}")
 
-print(f"\n  Sum of all probabilities = {np.sum(probs):.10f} (should be 1.0)")
+print()
+print(f"  Sum of all P(o|c) = {np.sum(probs):.10f} (must = 1.0)")
+print()
 
-# ============================================================
-# 3. Compare P(o|c) for different center words
-# ============================================================
-print("\n" + "=" * 70)
-print("COMPARISON: P(o|c) for different center words")
-print("=" * 70)
+# ─── Key Observations ────────────────────────────────────────────
+print("─" * 70)
+print("Key Observations")
+print("─" * 70)
 
-# Compute P(o|c) for center words: banking, river, crisis
-test_centers = ["banking", "river", "crisis"]
-all_probs = {}
+# Context words vs unrelated
+context_indices = [1, 2, 3, 4]  # crises, into, turning, problems
+unrelated_indices = [8, 9]       # cat, dog
+related_indices = [5, 6, 7]      # money, economy, policy
 
-for cw in test_centers:
-    c_idx = vocab.index(cw)
-    v_c = V_matrix[c_idx]
-    dots = U_matrix @ v_c  # all dot products at once
-    exp_s = np.exp(dots)
-    Z_c = np.sum(exp_s)
-    p = exp_s / Z_c
-    all_probs[cw] = p
-    print(f"\nP(o | c='{cw}'), Z={Z_c:.4f}:")
-    for i, w in enumerate(vocab):
-        bar = "█" * int(p[i] * 50)
-        marker = " ← (same word)" if w == cw else ""
-        print(f"  P({w:>8s}|{cw}) = {p[i]:.6f}  {bar}{marker}")
+p_context = sum(probs[i] for i in context_indices)
+p_unrelated = sum(probs[i] for i in unrelated_indices)
+p_related = sum(probs[i] for i in related_indices)
 
-# ============================================================
-# 4. Key insight: similar context → higher probability
-# ============================================================
-print("\n" + "=" * 70)
-print("KEY INSIGHT: Semantic similarity affects P(o|c)")
-print("=" * 70)
+print(f"  P(context words | banking) = {p_context:.6f}  (crises, into, turning, problems)")
+print(f"  P(related words | banking) = {p_related:.6f}  (money, economy, policy)")
+print(f"  P(unrelated words | banking) = {p_unrelated:.6f}  (cat, dog)")
+print()
 
-# banking and money have similar vectors → should get high P(o|c) when c=banking
-p_banking = all_probs["banking"]
-idx_money = vocab.index("money")
-idx_river = vocab.index("river")
-print(f"\nWhen c='banking':")
-print(f"  P(money|banking)  = {p_banking[idx_money]:.6f}  (semantically similar)")
-print(f"  P(river|banking)  = {p_banking[idx_river]:.6f}  (semantically different)")
-print(f"  Ratio = {p_banking[idx_money]/p_banking[idx_river]:.2f}x")
-print(f"\nThis is because v_banking and u_money have similar directions,")
-print(f"so their dot product is larger → higher exp → higher probability.")
+# The partition function cost
+print(f"  Partition function cost: computed exp() for {VOCAB_SIZE} words")
+print(f"  Real vocabulary: |V| ≈ 50,000+ → each training step needs 50,000+ exp() calls")
+print(f"  This is WHY negative sampling (WP05) replaces full softmax!")
+print()
 
-# ============================================================
-# 5. Computational bottleneck: partition function Z
-# ============================================================
-print("\n" + "=" * 70)
-print("COMPUTATIONAL BOTTLENECK: Partition function Z")
-print("=" * 70)
+# ─── Cross-entropy loss (Notes Eq.5) ────────────────────────────
+print("─" * 70)
+print("Cross-entropy loss (Notes Eq.5)")
+print("─" * 70)
+# Suppose the actual observed context word is "problems" (index 4)
+observed_idx = 4
+observed_word = VOCAB[observed_idx]
+loss = -np.log(probs[observed_idx])
+print(f"  Observed context word: '{observed_word}' (index {observed_idx})")
+print(f"  P('{observed_word}' | '{center_word}') = {probs[observed_idx]:.6f}")
+print(f"  L = -log P('{observed_word}' | '{center_word}') = -log({probs[observed_idx]:.6f}) = {loss:.6f}")
+print()
 
-vocab_sizes = [6, 100, 1000, 10000, 50000, 100000]
-print(f"\nFor each center word, computing Z requires |V| dot products:")
-print(f"  Z = Σ_{{w∈V}} exp(u_w^T · v_c)")
-print(f"\n  |V| (vocab size)  |  Dot products per center word")
-print(f"  {'─'*20}┼{'─'*30}")
-for vs in vocab_sizes:
-    print(f"  {vs:>16,}  |  {vs:>16,} dot products + exp + sum")
-
-print(f"\nIn a corpus with T=10M tokens, total operations ≈ T × |V|:")
-T = 10_000_000
-for vs in [10000, 50000, 100000]:
-    ops = T * vs
-    print(f"  |V|={vs:>7,}: {ops:.2e} operations per epoch")
-
-print(f"\nThis is why Negative Sampling (WP05) replaces the full softmax")
-print(f"with k binary classifiers — reducing O(|V|) to O(k) per step.")
-
-# ============================================================
-# 6. Visualization: Plot 1 — Probability distribution
-# ============================================================
-print("\n" + "=" * 70)
-print("Generating plots...")
-print("=" * 70)
-
-output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
+# ─── Visualization 1: Probability Distribution Bar Chart ─────────
+output_dir = "Labs/L01-word-vectors/outputs"
 os.makedirs(output_dir, exist_ok=True)
 
-# Plot 1: P(o|c) bar chart for center word "banking"
-fig, ax = plt.subplots(figsize=(10, 5))
-x = np.arange(V)
-width = 0.25
+fig, ax = plt.subplots(figsize=(12, 6))
+colors = ['#2ecc71' if i in context_indices else 
+          '#3498db' if i in related_indices else 
+          '#e74c3c' for i in range(VOCAB_SIZE)]
+bars = ax.bar(range(VOCAB_SIZE), probs, color=colors, edgecolor='black', linewidth=0.5)
 
-for idx, cw in enumerate(test_centers):
-    offset = (idx - 1) * width
-    bars = ax.bar(x + offset, all_probs[cw], width, label=f"c='{cw}'", alpha=0.85)
+ax.set_xlabel('Output word w', fontsize=12)
+ax.set_ylabel('P(w | "banking")', fontsize=12)
+ax.set_title('Skip-gram Softmax: P(o|c) for center word "banking"\n'
+             '(Green=context window, Blue=semantically related, Red=unrelated)', 
+             fontsize=13, fontweight='bold')
+ax.set_xticks(range(VOCAB_SIZE))
+ax.set_xticklabels(VOCAB, rotation=45, ha='right')
 
-ax.set_xlabel('Context word o', fontsize=12)
-ax.set_ylabel('P(o|c)', fontsize=12)
-ax.set_title('Skip-gram Softmax: P(o|c) for different center words\n'
-             '(Mini vocabulary, d=4, randomly initialized vectors)', fontsize=13)
-ax.set_xticks(x)
-ax.set_xticklabels(vocab, fontsize=10)
-ax.legend(fontsize=10)
-ax.set_ylim(0, max(max(p) for p in all_probs.values()) * 1.2)
+# Add probability values on bars
+for i, (bar, prob) in enumerate(zip(bars, probs)):
+    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.003,
+            f'{prob:.4f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
 
-# Add value labels on bars for "banking"
-for i, p_val in enumerate(all_probs["banking"]):
-    ax.text(i - width, p_val + 0.005, f'{p_val:.3f}', ha='center', fontsize=7, color='#1f77b4')
+# Legend
+from matplotlib.patches import Patch
+legend_elements = [Patch(facecolor='#2ecc71', edgecolor='black', label='Context window'),
+                   Patch(facecolor='#3498db', edgecolor='black', label='Semantically related'),
+                   Patch(facecolor='#e74c3c', edgecolor='black', label='Unrelated')]
+ax.legend(handles=legend_elements, loc='upper right')
 
 plt.tight_layout()
 plot1_path = os.path.join(output_dir, "skipgram-softmax-prob-distribution.png")
-fig.savefig(plot1_path, dpi=150, bbox_inches='tight')
-plt.close(fig)
+plt.savefig(plot1_path, dpi=150, bbox_inches='tight')
+plt.close()
 print(f"  Saved: {plot1_path}")
 
-# Plot 2: Three-step softmax visualization
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+# ─── Visualization 2: Dot Product Heatmap ────────────────────────
+fig, ax = plt.subplots(figsize=(10, 8))
+# Full dot product matrix: U @ V^T
+full_dots = U @ V.T
 
-# Panel A: Dot products
-ax = axes[0]
-colors = ['#2196F3' if i != center_idx else '#FF5722' for i in range(V)]
-ax.barh(range(V), dot_products, color=colors, alpha=0.85)
-ax.set_yticks(range(V))
-ax.set_yticklabels(vocab, fontsize=9)
-ax.set_xlabel('u_w^T · v_c', fontsize=11)
-ax.set_title('① Dot Product\n(similarity score)', fontsize=11)
-ax.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
-for i, dp in enumerate(dot_products):
-    ax.text(dp + 0.01, i, f'{dp:.3f}', va='center', fontsize=8)
+im = ax.imshow(full_dots, cmap='RdYlBu_r', aspect='auto', vmin=-1.5, vmax=1.5)
+ax.set_xticks(range(VOCAB_SIZE))
+ax.set_xticklabels(VOCAB, rotation=45, ha='right', fontsize=9)
+ax.set_yticks(range(VOCAB_SIZE))
+ax.set_yticklabels(VOCAB, fontsize=9)
+ax.set_xlabel('Center word c (v_c)', fontsize=11)
+ax.set_ylabel('Context word o (u_o)', fontsize=11)
+ax.set_title('Dot Products u_o^T v_c for All (center, context) Pairs\n'
+             '(Higher = more compatible → higher P(o|c))', 
+             fontsize=12, fontweight='bold')
 
-# Panel B: Exponentiation
-ax = axes[1]
-ax.barh(range(V), exp_scores, color=colors, alpha=0.85)
-ax.set_yticks(range(V))
-ax.set_yticklabels(vocab, fontsize=9)
-ax.set_xlabel('exp(u_w^T · v_c)', fontsize=11)
-ax.set_title('② Exponentiation\n(make positive, amplify)', fontsize=11)
-for i, es in enumerate(exp_scores):
-    ax.text(es + 0.01, i, f'{es:.3f}', va='center', fontsize=8)
+# Add text annotations
+for i in range(VOCAB_SIZE):
+    for j in range(VOCAB_SIZE):
+        val = full_dots[i, j]
+        color = 'white' if abs(val) > 0.8 else 'black'
+        ax.text(j, i, f'{val:.2f}', ha='center', va='center', fontsize=7, color=color)
 
-# Panel C: Normalized probabilities
-ax = axes[2]
-ax.barh(range(V), probs, color=colors, alpha=0.85)
-ax.set_yticks(range(V))
-ax.set_yticklabels(vocab, fontsize=9)
-ax.set_xlabel('P(o|c="banking")', fontsize=11)
-ax.set_title('③ Normalize\n(divide by Z)', fontsize=11)
-for i, p in enumerate(probs):
-    ax.text(p + 0.005, i, f'{p:.4f}', va='center', fontsize=8)
-ax.set_xlim(0, max(probs) * 1.3)
-
-plt.suptitle('Softmax Three Steps: Dot Product → Exponentiation → Normalize\n'
-             'Center word c = "banking"', fontsize=13, y=1.02)
+plt.colorbar(im, ax=ax, label='u_o^T v_c (dot product)', shrink=0.8)
 plt.tight_layout()
-plot2_path = os.path.join(output_dir, "skipgram-softmax-three-steps.png")
-fig.savefig(plot2_path, dpi=150, bbox_inches='tight')
-plt.close(fig)
+plot2_path = os.path.join(output_dir, "skipgram-softmax-dot-product-heatmap.png")
+plt.savefig(plot2_path, dpi=150, bbox_inches='tight')
+plt.close()
 print(f"  Saved: {plot2_path}")
 
-# Plot 3: Vocabulary size vs computation cost
-fig, ax = plt.subplots(figsize=(9, 5))
-realistic_sizes = [100, 1000, 5000, 10000, 50000, 100000]
-ops_per_step = realistic_sizes  # one dot product per word
-ops_per_epoch = [T * vs for vs in realistic_sizes]
+# ─── Visualization 3: Partition Function Cost Scaling ─────────────
+fig, ax = plt.subplots(figsize=(10, 5))
+vocab_sizes = [10, 100, 1000, 10000, 50000, 100000]
+# Simulate: each exp() takes ~1 microsecond
+time_per_exp_us = 1.0  # microseconds
+total_time_ms = [v * time_per_exp_us / 1000 for v in vocab_sizes]
 
-ax.semilogy(realistic_sizes, ops_per_epoch, 'bo-', linewidth=2, markersize=8)
+ax.bar(range(len(vocab_sizes)), total_time_ms, color='#9b59b6', edgecolor='black', linewidth=0.5)
+ax.set_xticks(range(len(vocab_sizes)))
+ax.set_xticklabels([f'{v:,}' for v in vocab_sizes])
 ax.set_xlabel('Vocabulary size |V|', fontsize=12)
-ax.set_ylabel('Operations per epoch (T=10M)', fontsize=12)
-ax.set_title('Softmax Computational Cost vs Vocabulary Size\n'
-             '(T × |V| dot products + exponentials per epoch)', fontsize=13)
-ax.grid(True, alpha=0.3)
+ax.set_ylabel('Time for one softmax (ms)', fontsize=12)
+ax.set_title('Partition Function Cost: O(|V|) per Training Step\n'
+             '(Each step requires exp() for EVERY word in vocabulary)',
+             fontsize=12, fontweight='bold')
 
-# Annotate key points
-for vs in [10000, 50000, 100000]:
-    ops = T * vs
-    label = f'|V|={vs:,}\n{ops:.1e} ops'
-    ax.annotate(label, (vs, ops), textcoords="offset points",
-                xytext=(10, 10), fontsize=9,
-                arrowprops=dict(arrowstyle='->', color='gray'))
+for i, (v, t) in enumerate(zip(vocab_sizes, total_time_ms)):
+    ax.text(i, t + 0.5, f'{t:.1f} ms', ha='center', va='bottom', fontsize=9, fontweight='bold')
 
-ax.axvspan(30000, 100000, alpha=0.1, color='red', label='Typical production range')
-ax.legend(fontsize=10)
+ax.annotate('Real word2vec\n|V| ≈ 50K-100K', 
+            xy=(4, total_time_ms[4]), xytext=(3, total_time_ms[4] + 15),
+            fontsize=10, ha='center',
+            arrowprops=dict(arrowstyle='->', color='red'),
+            color='red', fontweight='bold')
+
 plt.tight_layout()
-plot3_path = os.path.join(output_dir, "skipgram-softmax-computation-cost.png")
-fig.savefig(plot3_path, dpi=150, bbox_inches='tight')
-plt.close(fig)
+plot3_path = os.path.join(output_dir, "skipgram-softmax-partition-cost.png")
+plt.savefig(plot3_path, dpi=150, bbox_inches='tight')
+plt.close()
 print(f"  Saved: {plot3_path}")
 
-# ============================================================
-# 7. Save structured output for provenance
-# ============================================================
-output_data = {
-    "capsule": "skipgram-softmax",
-    "waypoint": "WP03",
-    "vocabulary": vocab,
-    "vocab_size": V,
-    "embedding_dim": d,
-    "center_word": center_word,
-    "dot_products": {w: round(float(dot_products[i]), 6) for i, w in enumerate(vocab)},
-    "exp_scores": {w: round(float(exp_scores[i]), 6) for i, w in enumerate(vocab)},
-    "partition_function_Z": round(float(Z), 6),
-    "probabilities": {w: round(float(probs[i]), 6) for i, w in enumerate(vocab)},
-    "probability_sum": round(float(np.sum(probs)), 10),
-    "comparison": {
-        cw: {w: round(float(all_probs[cw][i]), 6) for i, w in enumerate(vocab)}
-        for cw in test_centers
-    },
-    "key_insight": {
-        "P_money_given_banking": round(float(p_banking[idx_money]), 6),
-        "P_river_given_banking": round(float(p_banking[idx_river]), 6),
-        "ratio": round(float(p_banking[idx_money] / p_banking[idx_river]), 2),
-    },
-    "plots": {
-        "prob_distribution": "outputs/skipgram-softmax-prob-distribution.png",
-        "three_steps": "outputs/skipgram-softmax-three-steps.png",
-        "computation_cost": "outputs/skipgram-softmax-computation-cost.png",
-    }
-}
-
-json_path = os.path.join(output_dir, "skipgram-softmax-output.json")
-with open(json_path, 'w') as f:
-    json.dump(output_data, f, indent=2)
-print(f"  Saved: {json_path}")
-
-# Also save stdout to file for provenance
-print("\n" + "=" * 70)
-print("CAPSULE COMPLETE")
-print("=" * 70)
-print(f"\nAll outputs in: {output_dir}/")
-print(f"  - skipgram-softmax-prob-distribution.png")
-print(f"  - skipgram-softmax-three-steps.png")
-print(f"  - skipgram-softmax-computation-cost.png")
-print(f"  - skipgram-softmax-output.json")
+# ─── Save stdout ─────────────────────────────────────────────────
+print()
+print("─" * 70)
+print("Output files")
+print("─" * 70)
+print(f"  Plot 1 (probability distribution): {plot1_path}")
+print(f"  Plot 2 (dot product heatmap):      {plot2_path}")
+print(f"  Plot 3 (partition function cost):  {plot3_path}")
+print()
+print("Done.")

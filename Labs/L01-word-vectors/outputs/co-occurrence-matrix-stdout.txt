@@ -1,0 +1,148 @@
+======================================================================
+CS224N L01 — Code Capsule: co-occurrence-matrix (WP02)
+======================================================================
+
+Corpus: 14 sentences
+  [ 0] banking money finance economy
+  [ 1] money market invest finance
+  [ 2] banking invest market economy
+  [ 3] finance economy market money
+  [ 4] invest banking economy finance
+  [ 5] market economy banking money
+  [ 6] river lake forest mountain
+  [ 7] lake ocean valley forest
+  [ 8] forest mountain river valley
+  [ 9] mountain valley ocean river
+  [10] ocean river lake mountain
+  [11] valley forest ocean lake
+  [12] the banking river flows
+  [13] the forest economy grows
+
+Vocabulary size |V| = 15
+Words: ['banking', 'economy', 'finance', 'flows', 'forest', 'grows', 'invest', 'lake', 'market', 'money', 'mountain', 'ocean', 'river', 'the', 'valley']
+
+--- Co-occurrence Matrix (window_size=2) ---
+Matrix shape: (15, 15) = 225 entries
+Total co-occurrence count: 140
+Nonzero entries: 80
+Sparsity: 64.4%
+
+Co-occurrence matrix (raw counts):
+            banking   economy   finance     flows    forest     grows    invest      lake    market     money  mountain     ocean     river       the    valley
+ banking         0         2         2         1         0         0         2         0         2         2         0         0         1         1         0
+ economy         2         0         3         0         1         1         2         0         3         3         0         0         0         1         0
+ finance         2         3         0         0         0         0         1         0         2         1         0         0         0         0         0
+   flows         1         0         0         0         0         0         0         0         0         0         0         0         1         0         0
+  forest         0         1         0         0         0         1         0         2         0         0         2         2         2         1         2
+   grows         0         1         0         0         1         0         0         0         0         0         0         0         0         0         0
+  invest         2         2         1         0         0         0         0         0         2         1         0         0         0         0         0
+    lake         0         0         0         0         2         0         0         0         0         0         2         3         2         0         1
+  market         2         3         2         0         0         0         2         0         0         2         0         0         0         0         0
+   money         2         3         1         0         0         0         1         0         2         0         0         0         0         0         0
+mountain         0         0         0         0         2         0         0         2         0         0         0         1         2         0         2
+   ocean         0         0         0         0         2         0         0         3         0         0         1         0         2         0         3
+   river         1         0         0         1         2         0         0         2         0         0         2         2         0         1         2
+     the         1         1         0         0         1         0         0         0         0         0         0         0         1         0         0
+  valley         0         0         0         0         2         0         0         1         0         0         2         3         2         0         0
+
+--- Log normalization: X_log = log(1 + X) ---
+(Notes §3.1: 'replace each count X_ij with log(1 + X_ij)')
+Max raw count: 3
+Max log count: 1.3863
+Example: raw count 5 -> log(1+5) = 1.7918
+Example: raw count 1 -> log(1+1) = 0.6931
+
+--- SVD: 15D -> 2D ---
+Singular values (all): [5.89816185 5.18664079 2.14527    1.83092774 1.77886283 1.70097878
+ 1.30617807 1.19207914]
+Top-2 singular values: [5.89816185 5.18664079]
+
+Total variance (sum of all sigma^2): 81.9097
+Top-2 variance: 61.6896
+Explained variance ratio: 75.3%
+
+--- 2D Word Embeddings (after SVD, k=2) ---
+        Word        dim0        dim1        norm
+----------------------------------------------
+     banking     -1.8991     -1.3834      2.3495
+     economy     -2.0955     -1.5950      2.6334
+     finance     -1.4979     -1.4341      2.0738
+       flows     -0.4425      0.0075      0.4426
+      forest     -1.8886      1.4128      2.3586
+       grows     -0.4682     -0.0244      0.4688
+      invest     -1.4065     -1.3561      1.9537
+        lake     -1.5215      1.5672      2.1843
+      market     -1.6662     -1.6141      2.3198
+       money     -1.4979     -1.4341      2.0738
+    mountain     -1.4526      1.4874      2.0790
+       ocean     -1.5854      1.6407      2.2815
+       river     -1.8666      1.4396      2.3573
+         the     -0.9108     -0.0168      0.9109
+      valley     -1.5215      1.5672      2.1843
+
+--- Cosine Similarities (after SVD k=2) ---
+
+Within-cluster similarities (should be HIGH):
+      Word A        Word B    cosine
+------------------------------------
+     banking         money    0.9910
+     banking       finance    0.9910
+       money       finance    1.0000
+       river          lake    0.9898
+       river        forest    0.9999
+        lake        forest    0.9875
+
+Cross-cluster similarities (should be LOWER):
+      Word A        Word B    cosine
+------------------------------------
+     banking         river    0.2805
+     banking          lake    0.1406
+     banking        forest    0.2946
+       money         river    0.1496
+       money          lake    0.0069
+       money        forest    0.1642
+     finance         river    0.1496
+     finance          lake    0.0069
+     finance        forest    0.1642
+
+Mean within-cluster cosine:  0.9932
+Mean cross-cluster cosine:   0.1508
+Difference:                  0.8424
+
+>>> KEY OBSERVATION: Within-cluster similarity > Cross-cluster similarity
+>>> Co-occurrence + SVD captures semantic clusters from raw counts alone!
+
+--- Window Size Comparison ---
+
+Window size = 1:
+  Total count: 84, Nonzero: 54, Sparsity: 76.0%
+  Explained variance (k=2): 55.1%
+  cos(banking, finance) = 0.9920
+  cos(river, lake)      = 0.9814
+  cos(banking, river)   = 0.4004
+
+Window size = 2:
+  Total count: 140, Nonzero: 80, Sparsity: 64.4%
+  Explained variance (k=2): 75.3%
+  cos(banking, finance) = 0.9910
+  cos(river, lake)      = 0.9898
+  cos(banking, river)   = 0.2805
+
+Window size = 4:
+  Total count: 168, Nonzero: 84, Sparsity: 62.7%
+  Explained variance (k=2): 75.7%
+  cos(banking, finance) = 0.9908
+  cos(river, lake)      = 0.9915
+  cos(banking, river)   = 0.2597
+
+>>> Notes 3.1 insight: smaller window -> more syntactic info;
+>>> larger window -> more semantic/topic info.
+
+Saved coordinates: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-coordinates.json
+Saved heatmap: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/co-occurrence-matrix-heatmap.png
+Saved 2D embeddings plot: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
+Saved window comparison plot: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/co-occurrence-matrix-window-comparison.png
+
+======================================================================
+DONE -- All outputs saved to Labs/L01-word-vectors/outputs/
+======================================================================
