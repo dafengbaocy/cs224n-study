@@ -112,3 +112,17 @@ stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt (empt
 outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
 note: Re-run with updated notebook (added Chinese teaching sections). Used .venv/bin/python because numpy/matplotlib not in system python. Deterministic toy vectors, no randomness. All 3 plots generated successfully. Exit 0 no errors.
+
+## run_id 20260610T182000Z__t_6ff7c879__co-occurrence-matrix
+
+task_id: t_6ff7c879
+capsule_slug: co-occurrence-matrix
+timestamp: 2026-06-10T10:25:16Z
+hostname: 0d61b5cf12fa
+command: .venv/bin/python Labs/L01-word-vectors/co-occurrence-matrix.py
+exit_code: 0
+stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
+stderr: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stderr.txt
+outputs: Labs/L01-word-vectors/outputs/co-occurrence-matrix-output.json, Labs/L01-word-vectors/outputs/co-occurrence-matrix-heatmap.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-svd-2d.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-cosine-sim.png, Labs/L01-word-vectors/outputs/co-occurrence-matrix-window-comparison.png
+notebook: Labs/L01-word-vectors/co-occurrence-matrix.ipynb
+note: pure numpy script, deterministic corpus, no errors. matplotlib plots generated separately via dedicated plot script. All 4 images uploaded to obsidian-image repo via picgo-media MCP. GitHub push failed due to concurrent worker rebase conflicts (colab_link: blocked).
