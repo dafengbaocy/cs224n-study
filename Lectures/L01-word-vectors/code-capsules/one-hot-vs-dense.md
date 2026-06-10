@@ -61,7 +61,11 @@ cd /workspace/cs224n-study
 
 ### 对比图
 
+<<<<<<< Updated upstream
 ![One-hot vs Dense 对比图](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-181637.png)
+=======
+![One-hot vs Dense 对比图](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-181656.png)
+>>>>>>> Stashed changes
 
 > [!tip] 读图指南
 > - **左图**（One-hot）：三组词对的点积全是 0（蓝色柱），无论它们是近义词还是无关词。
