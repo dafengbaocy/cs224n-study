@@ -98,6 +98,8 @@ stderr: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-stderr.txt
 outputs: Labs/L01-word-vectors/outputs/cosine-similarity-analogy-heatmap.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-2d-projection.png, Labs/L01-word-vectors/outputs/cosine-similarity-analogy-results-chart.png
 notebook: Labs/L01-word-vectors/cosine-similarity-analogy.ipynb
 notes: Clean run, no errors. Toy 4D vectors designed with orthogonal semantic features (royalty/maleness/femaleness/youth). Classic analogy king-man+woman=queen achieves cos=0.9981. All 3 plots generated successfully.
+<<<<<<< HEAD
+=======
 
 ## run_id 20260610T080907Z__t_832bffea__skipgram-softmax
 
@@ -164,3 +166,4 @@ notes: |
   SVD k=2 explained variance: 75.3%.
   Within-cluster cosine mean: 0.9932, cross-cluster: 0.1508.
   No cells skipped. No cache used.
+>>>>>>> 4f19d35 (Add one-hot-vs-dense capsule (WP02))
