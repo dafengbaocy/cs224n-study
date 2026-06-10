@@ -9,10 +9,7 @@
 
 ### 运行方式
 
-**Colab 打开**（推荐）：
-
-> ⚠️ **Colab 链接暂不可用**：GitHub push 因多 worker 并发冲突失败。本地 `.ipynb` 已生成，可手动上传或等待冲突解决后重试。
-> 本地路径：`Labs/L01-word-vectors/co-occurrence-matrix.ipynb`
+**Colab 打开**（推荐）：[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dafengbaocy/cs224n-study/blob/main/L01-word-vectors/co-occurrence-matrix.ipynb)
 
 **本地运行**：
 ```bash
@@ -80,7 +77,7 @@ M[fish, book] = 0   (不同主题，零共现)
 
 ### SVD 2D 词向量可视化
 
-![SVD 2D Embeddings](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-182111.png)
+![SVD 2D Embeddings](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-182213.png)
 
 > [!tip] 读图指南
 > - **红圆（Animal）**：cat, dog, play, chase 等聚集在 x 轴负方向
@@ -99,7 +96,7 @@ M[fish, book] = 0   (不同主题，零共现)
 
 ### 窗口大小影响
 
-![Window Comparison](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-182117.png)
+![Window Comparison](https://raw.githubusercontent.com/dafengbaocy/obsidian-image/main/img/2026/06/10/20260610-182225.png)
 
 > [!tip] 读图指南
 > - window=1：只有直接相邻的词才算共现，矩阵稀疏（74/900 非零）
@@ -129,7 +126,7 @@ M[fish, book] = 0   (不同主题，零共现)
 
 ```yaml
 numeric_provenance:
-  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T182000Z__t_6ff7c879__co-occurrence-matrix
+  run_log: Labs/L01-word-vectors/run-log.md#run_id 20260610T101832Z__t_ab4e78fa__co-occurrence-matrix
   stdout: Labs/L01-word-vectors/outputs/co-occurrence-matrix-stdout.txt
   checked_values:
     - claim: "M[cat, dog] = 4"
