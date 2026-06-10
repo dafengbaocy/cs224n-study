@@ -1,0 +1,92 @@
+======================================================================
+CS224N L01 — Code Capsule: skipgram-softmax (WP03)
+======================================================================
+
+Center word: 'banking' (index 0)
+Center vector v_banking = [ 0.8  0.6 -0.3  0.1]
+Vocabulary size |V| = 10
+Vector dimension d = 4
+
+──────────────────────────────────────────────────────────────────────
+Step 1: Dot products u_w^T v_c (Slides p30: ① Dot product)
+──────────────────────────────────────────────────────────────────────
+  u_   banking^T v_banking  = +0.940000
+  u_    crises^T v_banking  = +1.150000
+  u_      into^T v_banking  = -0.010000
+  u_   turning^T v_banking  = +0.350000
+  u_  problems^T v_banking  = +1.030000
+  u_     money^T v_banking  = +0.940000
+  u_   economy^T v_banking  = +0.910000
+  u_    policy^T v_banking  = +0.510000
+  u_       cat^T v_banking  = -1.240000
+  u_       dog^T v_banking  = -1.060000
+
+──────────────────────────────────────────────────────────────────────
+Step 2: Exponentiation exp(u_w^T v_c) (Slides p30: ② Exponentiation)
+──────────────────────────────────────────────────────────────────────
+  exp(+0.940000) = 2.559981
+  exp(+1.150000) = 3.158193
+  exp(-0.010000) = 0.990050
+  exp(+0.350000) = 1.419068
+  exp(+1.030000) = 2.801066
+  exp(+0.940000) = 2.559981
+  exp(+0.910000) = 2.484323
+  exp(+0.510000) = 1.665291
+  exp(-1.240000) = 0.289384
+  exp(-1.060000) = 0.346456
+
+──────────────────────────────────────────────────────────────────────
+Step 3: Partition function Z = Σ exp(u_w^T v_c) (Slides p30: ③ Normalize)
+──────────────────────────────────────────────────────────────────────
+  Z = Σ_{w∈V} exp(u_w^T v_c) = 18.273793
+  (We had to compute exp for ALL 10 words!)
+
+──────────────────────────────────────────────────────────────────────
+Step 4: P(o|c) = exp(u_o^T v_c) / Z
+──────────────────────────────────────────────────────────────────────
+
+          Word   dot product    exp(score)      P(o|c)  bar
+  ────────────  ────────────  ────────────  ──────────  ────────────────────
+       banking     +0.940000      2.559981    0.140090  ███████
+        crises     +1.150000      3.158193    0.172826  ████████ ← context
+          into     -0.010000      0.990050    0.054179  ██ ← context
+       turning     +0.350000      1.419068    0.077656  ███ ← context
+      problems     +1.030000      2.801066    0.153283  ███████ ← context
+         money     +0.940000      2.559981    0.140090  ███████
+       economy     +0.910000      2.484323    0.135950  ██████
+        policy     +0.510000      1.665291    0.091130  ████
+           cat     -1.240000      0.289384    0.015836  
+           dog     -1.060000      0.346456    0.018959  
+
+  Sum of all P(o|c) = 1.0000000000 (must = 1.0)
+
+──────────────────────────────────────────────────────────────────────
+Key Observations
+──────────────────────────────────────────────────────────────────────
+  P(context words | banking) = 0.457944  (crises, into, turning, problems)
+  P(related words | banking) = 0.367170  (money, economy, policy)
+  P(unrelated words | banking) = 0.034795  (cat, dog)
+
+  Partition function cost: computed exp() for 10 words
+  Real vocabulary: |V| ≈ 50,000+ → each training step needs 50,000+ exp() calls
+  This is WHY negative sampling (WP05) replaces full softmax!
+
+──────────────────────────────────────────────────────────────────────
+Cross-entropy loss (Notes Eq.5)
+──────────────────────────────────────────────────────────────────────
+  Observed context word: 'problems' (index 4)
+  P('problems' | 'banking') = 0.153283
+  L = -log P('problems' | 'banking') = -log(0.153283) = 1.875468
+
+  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
+  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png
+  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
+
+──────────────────────────────────────────────────────────────────────
+Output files
+──────────────────────────────────────────────────────────────────────
+  Plot 1 (probability distribution): Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
+  Plot 2 (dot product heatmap):      Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png
+  Plot 3 (partition function cost):  Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
+
+Done.

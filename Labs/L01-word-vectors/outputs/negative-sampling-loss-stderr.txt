@@ -1,0 +1,44 @@
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 27491 (\N{CJK UNIFIED IDEOGRAPH-6B63}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 26679 (\N{CJK UNIFIED IDEOGRAPH-6837}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 26412 (\N{CJK UNIFIED IDEOGRAPH-672C}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 25289 (\N{CJK UNIFIED IDEOGRAPH-62C9}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 36817 (\N{CJK UNIFIED IDEOGRAPH-8FD1}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 36127 (\N{CJK UNIFIED IDEOGRAPH-8D1F}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 25512 (\N{CJK UNIFIED IDEOGRAPH-63A8}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 36828 (\N{CJK UNIFIED IDEOGRAPH-8FDC}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 21152 (\N{CJK UNIFIED IDEOGRAPH-52A0}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 36895 (\N{CJK UNIFIED IDEOGRAPH-901F}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:281: UserWarning: Glyph 27604 (\N{CJK UNIFIED IDEOGRAPH-6BD4}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 27491 (\N{CJK UNIFIED IDEOGRAPH-6B63}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 26679 (\N{CJK UNIFIED IDEOGRAPH-6837}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 26412 (\N{CJK UNIFIED IDEOGRAPH-672C}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 25289 (\N{CJK UNIFIED IDEOGRAPH-62C9}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 36817 (\N{CJK UNIFIED IDEOGRAPH-8FD1}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 36127 (\N{CJK UNIFIED IDEOGRAPH-8D1F}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 25512 (\N{CJK UNIFIED IDEOGRAPH-63A8}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 36828 (\N{CJK UNIFIED IDEOGRAPH-8FDC}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 21152 (\N{CJK UNIFIED IDEOGRAPH-52A0}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 36895 (\N{CJK UNIFIED IDEOGRAPH-901F}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+/workspace/cs224n-study/Labs/L01-word-vectors/negative-sampling-loss.py:285: UserWarning: Glyph 27604 (\N{CJK UNIFIED IDEOGRAPH-6BD4}) missing from font(s) DejaVu Sans.
+  plt.savefig(fig_path, dpi=150, bbox_inches='tight')

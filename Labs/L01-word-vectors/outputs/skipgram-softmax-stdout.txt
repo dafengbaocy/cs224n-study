@@ -1,92 +1,108 @@
-======================================================================
-CS224N L01 — Code Capsule: skipgram-softmax (WP03)
-======================================================================
+====================================================================
+Skip-gram Softmax P(o|c)
+CS224N L01 - Code Capsule: skipgram-softmax
+====================================================================
 
-Center word: 'banking' (index 0)
-Center vector v_banking = [ 0.8  0.6 -0.3  0.1]
-Vocabulary size |V| = 10
-Vector dimension d = 4
+Vocabulary (|V|=8): ['banking', 'money', 'river', 'bank', 'stream', 'credit', 'loan', 'water']
+Embedding dim d=4
+Clusters: finance=[banking,money,credit,loan]  river=[river,stream,water]  ambiguous=[bank]
 
-──────────────────────────────────────────────────────────────────────
-Step 1: Dot products u_w^T v_c (Slides p30: ① Dot product)
-──────────────────────────────────────────────────────────────────────
-  u_   banking^T v_banking  = +0.940000
-  u_    crises^T v_banking  = +1.150000
-  u_      into^T v_banking  = -0.010000
-  u_   turning^T v_banking  = +0.350000
-  u_  problems^T v_banking  = +1.030000
-  u_     money^T v_banking  = +0.940000
-  u_   economy^T v_banking  = +0.910000
-  u_    policy^T v_banking  = +0.510000
-  u_       cat^T v_banking  = -1.240000
-  u_       dog^T v_banking  = -1.060000
+####################################################################
+# Part A: Random initialization (before training)
+####################################################################
 
-──────────────────────────────────────────────────────────────────────
-Step 2: Exponentiation exp(u_w^T v_c) (Slides p30: ② Exponentiation)
-──────────────────────────────────────────────────────────────────────
-  exp(+0.940000) = 2.559981
-  exp(+1.150000) = 3.158193
-  exp(-0.010000) = 0.990050
-  exp(+0.350000) = 1.419068
-  exp(+1.030000) = 2.801066
-  exp(+0.940000) = 2.559981
-  exp(+0.910000) = 2.484323
-  exp(+0.510000) = 1.665291
-  exp(-1.240000) = 0.289384
-  exp(-1.060000) = 0.346456
+Matrix shapes: V=(8, 4), U=(8, 4), total params=64
+Center word: 'banking', v_c = [ 0.0497 -0.0138  0.0648  0.1523]
 
-──────────────────────────────────────────────────────────────────────
-Step 3: Partition function Z = Σ exp(u_w^T v_c) (Slides p30: ③ Normalize)
-──────────────────────────────────────────────────────────────────────
-  Z = Σ_{w∈V} exp(u_w^T v_c) = 18.273793
-  (We had to compute exp for ALL 10 words!)
+--- Part A: Random init results ---
 
-──────────────────────────────────────────────────────────────────────
-Step 4: P(o|c) = exp(u_o^T v_c) / Z
-──────────────────────────────────────────────────────────────────────
+============================================================================
+  Word            Dot Score     exp(s-max)       P(o|c)  Bar
+============================================================================
+  banking       -0.011871       0.971879     0.123608  #### <- center
+  money         -0.001857       0.981660     0.124852  ####
+  river         -0.001904       0.981614     0.124846  ####
+  bank           0.006768       0.990163     0.125934  #####
+  stream         0.000379       0.983857     0.125131  #####
+  credit         0.016653       1.000000     0.127185  #####
+  loan           0.013262       0.996615     0.126754  #####
+  water         -0.027508       0.956800     0.121690  ####
+============================================================================
+  SUM                           7.862588     1.000000
+  Check: sum P(o|c) = 1.0000000000
 
-          Word   dot product    exp(score)      P(o|c)  bar
-  ────────────  ────────────  ────────────  ──────────  ────────────────────
-       banking     +0.940000      2.559981    0.140090  ███████
-        crises     +1.150000      3.158193    0.172826  ████████ ← context
-          into     -0.010000      0.990050    0.054179  ██ ← context
-       turning     +0.350000      1.419068    0.077656  ███ ← context
-      problems     +1.030000      2.801066    0.153283  ███████ ← context
-         money     +0.940000      2.559981    0.140090  ███████
-       economy     +0.910000      2.484323    0.135950  ██████
-        policy     +0.510000      1.665291    0.091130  ████
-           cat     -1.240000      0.289384    0.015836  
-           dog     -1.060000      0.346456    0.018959  
+  Highest: P(credit|banking) = 0.127185
+  Lowest:  P(water|banking) = 0.121690
+  Ratio: 1.05x
+  -> Random init: all probs nearly equal (~ 1/8 = 0.1250)
 
-  Sum of all P(o|c) = 1.0000000000 (must = 1.0)
+####################################################################
+# Part B: Hand-designed vectors (simulating trained embeddings)
+####################################################################
 
-──────────────────────────────────────────────────────────────────────
-Key Observations
-──────────────────────────────────────────────────────────────────────
-  P(context words | banking) = 0.457944  (crises, into, turning, problems)
-  P(related words | banking) = 0.367170  (money, economy, policy)
-  P(unrelated words | banking) = 0.034795  (cat, dog)
+Design logic:
+  Finance words (banking/money/credit/loan): high positive on dim 0
+  River words (river/stream/water): high positive on dim 1
+  bank: moderate on both dims (ambiguous)
+  -> banking dot product with money/credit/loan will be larger
 
-  Partition function cost: computed exp() for 10 words
-  Real vocabulary: |V| ≈ 50,000+ → each training step needs 50,000+ exp() calls
-  This is WHY negative sampling (WP05) replaces full softmax!
+Center word: 'banking'
+  v_banking = [1.  0.  0.2 0.1]
 
-──────────────────────────────────────────────────────────────────────
-Cross-entropy loss (Notes Eq.5)
-──────────────────────────────────────────────────────────────────────
-  Observed context word: 'problems' (index 4)
-  P('problems' | 'banking') = 0.153283
-  L = -log P('problems' | 'banking') = -log(0.153283) = 1.875468
+Dot product detail (money example):
+  u_money = [0.8 0.1 0.1 0. ]
+  u_money . v_banking = 0.8x1.0 + 0.1x0.0 + 0.1x0.2 + 0.0x0.1
+                    = 0.8200
 
-  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
-  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png
-  Saved: Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
+--- Part B: Trained vector results ---
 
-──────────────────────────────────────────────────────────────────────
-Output files
-──────────────────────────────────────────────────────────────────────
-  Plot 1 (probability distribution): Labs/L01-word-vectors/outputs/skipgram-softmax-prob-distribution.png
-  Plot 2 (dot product heatmap):      Labs/L01-word-vectors/outputs/skipgram-softmax-dot-product-heatmap.png
-  Plot 3 (partition function cost):  Labs/L01-word-vectors/outputs/skipgram-softmax-partition-cost.png
+============================================================================
+  Word            Dot Score     exp(s-max)       P(o|c)  Bar
+============================================================================
+  banking        1.050000       1.000000     0.194811  ####### <- center
+  money          0.820000       0.794534     0.154784  ######
+  river          0.050000       0.367879     0.071667  ##
+  bank           0.530000       0.594521     0.115819  ####
+  stream         0.140000       0.402524     0.078416  ###
+  credit         0.930000       0.886920     0.172782  ######
+  loan           0.720000       0.718924     0.140054  #####
+  water          0.050000       0.367879     0.071667  ##
+============================================================================
+  SUM                           5.133181     1.000000
+  Check: sum P(o|c) = 1.0000000000
 
-Done.
+  Highest: P(banking|banking) = 0.194811
+  Lowest:  P(water|banking) = 0.071667
+  Ratio: 2.72x
+
+  After training:
+    Finance words (money/credit/loan/banking): prob increases
+    River words (river/stream/water): prob decreases
+    bank (ambiguous): prob in between
+
+####################################################################
+# Part C: Random vs Trained comparison
+####################################################################
+
+Word           P_random  P_trained      Delta
+--------------------------------------------
+  banking        0.1236     0.1948  +0.0712 ^
+  money          0.1249     0.1548  +0.0299 ^
+  river          0.1248     0.0717  -0.0532 v
+  bank           0.1259     0.1158  -0.0101 v
+  stream         0.1251     0.0784  -0.0467 v
+  credit         0.1272     0.1728  +0.0456 ^
+  loan           0.1268     0.1401  +0.0133 ^
+  water          0.1217     0.0717  -0.0500 v
+
+  Softmax converts dot-product scores into a probability distribution.
+  Training objective (Notes Eq.5): adjust U,V to maximize P(true context|center).
+
+Results saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-results.json
+Plot 1 saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-probability-bar.png
+Plot 2 saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-dotscore-vs-prob.png
+Plot 3 saved: /workspace/cs224n-study/Labs/L01-word-vectors/outputs/skipgram-softmax-random-vs-trained.png
+
+====================================================================
+Done. All outputs saved to outputs/ directory.
+====================================================================

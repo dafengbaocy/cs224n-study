@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "softmax_loss": 2.4688,
   "softmax_prob_queen_king": 0.084686,
   "partition_function_Z": 11.669741,
@@ -87,4 +88,42 @@
     "Labs/L01-word-vectors/outputs/negative-sampling-loss-k-effect.png",
     "Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-comparison.png"
   ]
+=======
+  "capsule": "negative-sampling-loss",
+  "waypoint": "WP05",
+  "vocab_size": 20,
+  "embedding_dim": 4,
+  "num_negatives": 5,
+  "full_softmax_loss": 2.773,
+  "sgns_loss": 4.0589,
+  "positive_word": "dog",
+  "positive_dot_product": 0.1903,
+  "positive_sigma": 0.5474,
+  "negative_words": [
+    "house",
+    "woman",
+    "fish",
+    "swim",
+    "man"
+  ],
+  "negative_dot_products": [
+    0.3379,
+    -0.3789,
+    0.301,
+    -0.2069,
+    -0.177
+  ],
+  "speedup_toy": 4,
+  "speedup_real_10k": 2000,
+  "speedup_real_100k": 20000,
+  "gradient_positive": [
+    -1.0,
+    -0.75
+  ],
+  "gradient_total": [
+    -2.25,
+    -1.25
+  ],
+  "figure": "Labs/L01-word-vectors/outputs/negative-sampling-loss-gradient-and-comparison.png"
+>>>>>>> cf728cf (Add negative-sampling-loss capsule (WP05))
 }
