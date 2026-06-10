@@ -3,109 +3,113 @@ CS224N L01 — Code Capsule: co-occurrence-matrix
 Waypoint WP02: Distributional Semantics
 ============================================================
 
-Corpus: 10 sentences, 68 tokens
-Vocabulary size |V| = 26
-Vocabulary: ['a', 'above', 'and', 'are', 'banking', 'connected', 'depends', 'economy', 'finance', 'flows', 'forest', 'in', 'is', 'lake', 'manages', 'money', 'mountain', 'near', 'on', 'overlooks', 'rises', 'river', 'surrounds', 'system', 'the', 'through']
+Corpus: 14 sentences, 105 tokens
+Vocabulary size |V| = 32
+Vocabulary: ['a', 'above', 'and', 'are', 'banking', 'connected', 'depends', 'economy', 'finance', 'flows', 'forest', 'in', 'invest', 'is', 'lake', 'like', 'manages', 'market', 'money', 'mountain', 'near', 'ocean', 'on', 'overlooks', 'rises', 'river', 'surrounds', 'system', 'the', 'through', 'to', 'valley']
 
---- Co-occurrence Matrix (window=1) ---
-Shape: (26, 26)
+--- Co-occurrence Matrix (window=2) ---
+Shape: (32, 32)
+Total co-occurrence count: 336
+Nonzero entries: 212
 
-                   a     above       and       are   banking connected   depends   economy   finance     flows    forest        in        is      lake   manages     money  mountain      near        on overlooks     rises     river surrounds    system       the   through
-         a         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         2         0         0         0         0         0         0         0         0         0
-     above         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         1         0
-       and         0         0         0         0         1         0         0         1         3         0         1         0         0         3         0         1         1         0         0         0         0         3         0         0         0         0
-       are         0         0         0         0         0         1         0         0         1         0         0         1         0         1         0         0         0         0         0         0         0         0         0         0         0         0
-   banking         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         2         2         0
- connected         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
-   depends         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0
-   economy         0         0         1         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         2         0
-   finance         0         0         3         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
-     flows         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         1         0         0         0         2
-    forest         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         3         0
-        in         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0
-        is         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         1         0         0         0         0         0         0         0         0
-      lake         0         0         3         1         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         3         0
-   manages         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         1         0         0
-     money         0         0         1         0         0         0         0         0         0         1         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0
-  mountain         2         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         1         0         0         0         1         0
-      near         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         1         0
-        on         0         0         0         0         1         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
- overlooks         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         1         0
-     rises         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0
-     river         0         0         3         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         3         0
- surrounds         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0
-    system         0         0         0         0         2         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0
-       the         0         1         0         0         2         0         0         2         0         0         3         1         0         3         0         0         1         1         0         1         0         3         1         0         0         2
-   through         0         0         0         0         0         0         0         0         0         2         0         0         0         0         0         0         0         0         0         0         0         0         0         0         2         0
+Co-occurrence sub-matrix (content words only):
+               above       are   banking connected   depends   economy   finance     flows    forest    invest      lake      like   manages    market     money  mountain      near     ocean        on overlooks     rises     river surrounds    system   through    valley
+     above         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         1         0         0         0         0         1         0         0         0         0         0
+       are         0         0         0         1         0         0         1         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
+   banking         0         0         0         0         1         0         1         0         0         0         0         0         1         1         0         0         0         0         1         0         0         0         0         2         1         0
+ connected         0         1         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
+   depends         0         0         1         0         0         2         0         0         0         0         0         0         0         1         1         0         0         0         2         0         0         0         0         0         0         0
+   economy         0         0         0         0         2         0         1         0         0         0         0         0         0         1         0         0         0         0         2         0         0         0         0         0         1         0
+   finance         0         1         1         1         0         1         0         0         0         0         0         0         0         1         1         0         0         0         0         0         0         0         0         0         0         0
+     flows         0         0         0         0         0         0         0         0         0         0         0         1         0         0         2         0         0         0         0         0         0         2         0         0         2         0
+    forest         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         1         0         1         1
+    invest         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0
+      lake         1         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         2         1         0         0         1
+      like         0         0         0         0         0         0         0         1         0         0         0         0         0         0         1         0         0         0         0         0         0         1         0         0         1         0
+   manages         0         0         1         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         1         0         0
+    market         0         0         1         0         1         1         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
+     money         0         0         0         0         1         0         1         2         0         1         0         1         1         0         0         0         0         0         1         0         0         0         0         1         2         0
+  mountain         1         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         1         0         0         1         1         0         0         0         0         0
+      near         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0
+     ocean         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0
+        on         0         0         1         0         2         2         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0         0
+ overlooks         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         1         0         0         0         0
+     rises         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         1         0         0         0         0         0         0         0         0         0         0
+     river         0         0         0         0         0         0         0         2         0         0         2         1         0         0         0         0         0         1         0         1         0         0         0         0         1         0
+ surrounds         0         0         0         0         0         0         0         0         1         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
+    system         0         0         2         0         0         0         0         0         0         0         0         0         1         0         1         0         0         0         0         0         0         0         0         0         0         0
+   through         0         0         1         0         0         1         0         2         1         0         0         1         0         0         2         0         0         0         0         0         0         1         0         0         0         0
+    valley         0         0         0         0         0         0         0         0         1         0         1         0         0         0         0         0         0         0         0         0         0         0         0         0         0         0
 
-Non-zero co-occurrences for content words (window=1):
-       above: [('rises', np.int64(1)), ('the', np.int64(1))]
-         are: [('connected', np.int64(1)), ('finance', np.int64(1)), ('in', np.int64(1)), ('lake', np.int64(1))]
-     banking: [('system', np.int64(2)), ('the', np.int64(2)), ('and', np.int64(1)), ('on', np.int64(1))]
-   connected: [('are', np.int64(1))]
-     depends: [('economy', np.int64(1)), ('on', np.int64(1))]
-     economy: [('the', np.int64(2)), ('and', np.int64(1)), ('depends', np.int64(1))]
-     finance: [('and', np.int64(3)), ('are', np.int64(1))]
-       flows: [('through', np.int64(2)), ('money', np.int64(1)), ('river', np.int64(1))]
-      forest: [('the', np.int64(3)), ('and', np.int64(1)), ('surrounds', np.int64(1))]
-        lake: [('and', np.int64(3)), ('the', np.int64(3)), ('are', np.int64(1)), ('is', np.int64(1))]
-     manages: [('money', np.int64(1)), ('system', np.int64(1))]
-       money: [('and', np.int64(1)), ('flows', np.int64(1)), ('manages', np.int64(1))]
-    mountain: [('a', np.int64(2)), ('and', np.int64(1)), ('overlooks', np.int64(1)), ('rises', np.int64(1)), ('the', np.int64(1))]
-        near: [('is', np.int64(1)), ('the', np.int64(1))]
-          on: [('banking', np.int64(1)), ('depends', np.int64(1))]
-   overlooks: [('mountain', np.int64(1)), ('the', np.int64(1))]
-       rises: [('above', np.int64(1)), ('mountain', np.int64(1))]
-       river: [('and', np.int64(3)), ('the', np.int64(3)), ('flows', np.int64(1))]
-   surrounds: [('forest', np.int64(1)), ('the', np.int64(1))]
-      system: [('banking', np.int64(2)), ('manages', np.int64(1))]
-     through: [('flows', np.int64(2)), ('the', np.int64(2))]
+Non-zero co-occurrences for key words (window=2, all vocab):
+     banking: [('the', np.int64(3)), ('and', np.int64(2)), ('system', np.int64(2)), ('depends', np.int64(1)), ('finance', np.int64(1)), ('in', np.int64(1)), ('manages', np.int64(1)), ('market', np.int64(1)), ('on', np.int64(1)), ('through', np.int64(1))]
+       money: [('and', np.int64(2)), ('flows', np.int64(2)), ('through', np.int64(2)), ('depends', np.int64(1)), ('finance', np.int64(1)), ('invest', np.int64(1)), ('like', np.int64(1)), ('manages', np.int64(1)), ('on', np.int64(1)), ('system', np.int64(1)), ('the', np.int64(1))]
+     finance: [('and', np.int64(4)), ('are', np.int64(1)), ('banking', np.int64(1)), ('connected', np.int64(1)), ('economy', np.int64(1)), ('market', np.int64(1)), ('money', np.int64(1))]
+     economy: [('the', np.int64(4)), ('depends', np.int64(2)), ('on', np.int64(2)), ('and', np.int64(1)), ('finance', np.int64(1)), ('market', np.int64(1)), ('through', np.int64(1))]
+       river: [('the', np.int64(4)), ('and', np.int64(3)), ('flows', np.int64(2)), ('lake', np.int64(2)), ('like', np.int64(1)), ('ocean', np.int64(1)), ('overlooks', np.int64(1)), ('through', np.int64(1))]
+        lake: [('and', np.int64(3)), ('the', np.int64(3)), ('river', np.int64(2)), ('above', np.int64(1)), ('are', np.int64(1)), ('in', np.int64(1)), ('is', np.int64(1)), ('near', np.int64(1)), ('surrounds', np.int64(1)), ('valley', np.int64(1))]
+      forest: [('the', np.int64(3)), ('and', np.int64(2)), ('mountain', np.int64(1)), ('surrounds', np.int64(1)), ('through', np.int64(1)), ('valley', np.int64(1))]
+    mountain: [('a', np.int64(2)), ('the', np.int64(2)), ('above', np.int64(1)), ('and', np.int64(1)), ('forest', np.int64(1)), ('near', np.int64(1)), ('overlooks', np.int64(1)), ('rises', np.int64(1))]
+
+--- Log Normalization ---
+Before log: max = 9 , mean (nonzero) = 1.58
+After log:  max = 2.3026 , mean (nonzero) = 0.8930
 
 --- SVD Reduction to 2D ---
-Singular values (top 6): [8.316 8.212 3.619 3.554 2.561 2.507]
-Explained variance ratio: [32.6 31.8]%
+Raw co-occurrence singular values (top 6): [20.233 12.967  6.556  5.08   4.84   4.473]
+  Top-2 explained variance: [52.2 21.4]%
+Log-normalized singular values (top 6): [9.313 4.804 3.912 3.256 2.886 2.819]
+  Top-2 explained variance: [45.9 12.2]%
 
-2D Embeddings (window=1):
-           a: [ -0.2738,  -0.2448]
-       above: [ -0.5711,   0.5667]
-         and: [ -3.4877,  -3.5326]
-         are: [ -0.6068,  -0.6226]
-     banking: [ -1.6369,   1.6354]
-   connected: [ -0.0730,   0.0758]
-     depends: [ -0.2116,  -0.1654]
-     economy: [ -1.5377,   1.5372]
-     finance: [ -1.3311,   1.3664]
-       flows: [ -0.7263,  -0.7388]
-      forest: [ -2.1555,   2.0243]
-          in: [ -0.6194,   0.6192]
-          is: [ -0.4355,  -0.4443]
-        lake: [ -3.0228,   3.0508]
-     manages: [ -0.1115,  -0.0153]
-       money: [ -0.5201,   0.5220]
-    mountain: [ -1.1385,   1.0053]
-        near: [ -0.5988,   0.5975]
-          on: [ -0.2223,  -0.1790]
-   overlooks: [ -0.6833,   0.4210]
-       rises: [ -0.2056,  -0.1914]
-       river: [ -2.9848,   3.0108]
-   surrounds: [ -0.8056,   0.2969]
-      system: [ -0.4071,  -0.3964]
-         the: [ -4.5441,  -4.4623]
-     through: [ -1.2675,   1.2668]
+2D Embeddings (log-normalized, window=2):
+       above: [ -0.6431,  -0.3773]
+         are: [ -1.2646,  -0.0921]
+     banking: [ -1.9665,  -0.5198]
+   connected: [ -0.6044,  -0.5766]
+     depends: [ -1.1006,  -0.2463]
+     economy: [ -1.7418,  -1.0542]
+     finance: [ -1.3334,   0.8445]
+       flows: [ -1.5374,  -1.0306]
+      forest: [ -1.5422,  -0.5086]
+      invest: [ -1.1563,  -0.4616]
+        lake: [ -2.0547,  -0.1270]
+        like: [ -0.5269,   0.2752]
+     manages: [ -0.6293,   0.3612]
+      market: [ -1.7981,  -0.7188]
+       money: [ -1.6996,   0.0194]
+    mountain: [ -1.1834,  -0.3807]
+        near: [ -0.6626,  -0.3321]
+       ocean: [ -1.2924,  -0.3560]
+          on: [ -1.0573,   0.6563]
+   overlooks: [ -0.6280,  -0.4277]
+       rises: [ -0.5163,  -0.4343]
+       river: [ -2.1435,  -0.4233]
+   surrounds: [ -0.8441,  -0.7216]
+      system: [ -0.9817,  -0.7494]
+     through: [ -1.6987,  -0.4732]
+      valley: [ -1.1878,  -0.0252]
 
---- Cosine Similarities (window=1, 2D SVD) ---
-  sim(   banking,    finance) = 0.9999
-  sim(   banking,      money) = 1.0000
-  sim(     river,       lake) = 1.0000
-  sim(     river,     forest) = 0.9994
-  sim(   banking,      river) = 1.0000
-  sim(   finance,   mountain) = 0.9972
-  sim(       the,          a) = 0.9989
+--- Cosine Similarities (log-normalized SVD, 2D) ---
+  sim(   banking,    finance) = 0.6800  [same cluster (finance)]
+  sim(   banking,      money) = 0.9638  [same cluster (finance)]
+  sim(   banking,    economy) = 0.9594  [same cluster (finance)]
+  sim(     river,       lake) = 0.9911  [same cluster (nature)]
+  sim(     river,     forest) = 0.9924  [same cluster (nature)]
+  sim(      lake,     valley) = 0.9992  [same cluster (nature)]
+  sim(   banking,      river) = 0.9980  [CROSS cluster]
+  sim(   finance,   mountain) = 0.6404  [CROSS cluster]
+  sim(     money,      ocean) = 0.9610  [CROSS cluster]
 
---- Window Size Comparison ---
-  Window=1: sim(banking,money)=1.0000  sim(river,lake)=1.0000  sim(banking,forest)=0.9995
-  Window=2: sim(banking,money)=0.6018  sim(river,lake)=0.9996  sim(banking,forest)=0.9774
-  Window=3: sim(banking,money)=0.9902  sim(river,lake)=0.9980  sim(banking,forest)=0.9375
+--- Window Size Comparison (log-normalized SVD) ---
+  Window   banking-money      river-lake   banking-forest
+       1          0.9896          1.0000           0.9980
+       2          0.9638          0.9911           0.9982
+       3          0.9944          0.9943           0.9433
+
+Interpretation:
+  - Short window (1): captures syntactic context → words in similar grammatical roles cluster
+  - Medium window (2): balances syntax and semantics → clear cluster separation
+  - Large window (3+): captures topic/semantics → more words share broad topic context
 
 Saved: Labs/L01-word-vectors/outputs/co-occurrence-matrix-overview.png
 Saved: Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
@@ -113,26 +117,27 @@ Saved: Labs/L01-word-vectors/outputs/co-occurrence-matrix-2d-embeddings.png
 ============================================================
 SUMMARY STATISTICS
 ============================================================
-Matrix shape: (26, 26)
-Matrix total count: 116
-Matrix nonzero entries: 80
-Singular values (all): [8.3162 8.2116 3.6192 3.5538 2.5606 2.5071 2.4651 2.4073 2.281  2.1361
- 1.6109 1.592  1.3535 1.3349 1.2163 1.1533 0.9156 0.8966 0.8396 0.7918
- 0.7095 0.4144 0.     0.     0.     0.    ]
-Top-2 explained variance: [32.6 31.8]%
+Corpus: 14 sentences, 105 tokens, |V|=32
+Matrix shape: (32, 32)
+Matrix total count: 336
+Matrix nonzero entries: 212
+Log-normalized SVD singular values (top 6): [9.3129 4.8045 3.9117 3.2564 2.8862 2.8189]
+Top-2 explained variance: [45.9 12.2]%
 
-Key cosine similarities (window=1, 2D SVD):
-  cos(banking, finance) = 0.9999
-  cos(banking, money) = 1.0000
-  cos(river, lake) = 1.0000
-  cos(river, forest) = 0.9994
-  cos(banking, river) = 1.0000
-  cos(finance, mountain) = 0.9972
-  cos(the, a) = 0.9989
+Key cosine similarities (log-normalized, window=2, 2D SVD):
+  cos(banking, finance) = 0.6800  [same cluster (finance)]
+  cos(banking, money) = 0.9638  [same cluster (finance)]
+  cos(banking, economy) = 0.9594  [same cluster (finance)]
+  cos(river, lake) = 0.9911  [same cluster (nature)]
+  cos(river, forest) = 0.9924  [same cluster (nature)]
+  cos(lake, valley) = 0.9992  [same cluster (nature)]
+  cos(banking, river) = 0.9980  [CROSS cluster]
+  cos(finance, mountain) = 0.6404  [CROSS cluster]
+  cos(money, ocean) = 0.9610  [CROSS cluster]
 
-Window size effect:
-  w=1: banking-money=1.0000, river-lake=1.0000, banking-forest=0.9995
-  w=2: banking-money=0.6018, river-lake=0.9996, banking-forest=0.9774
-  w=3: banking-money=0.9902, river-lake=0.9980, banking-forest=0.9375
+Window size effect (log-normalized):
+  w=1: banking-money=0.9896, river-lake=1.0000, banking-forest=0.9980
+  w=2: banking-money=0.9638, river-lake=0.9911, banking-forest=0.9982
+  w=3: banking-money=0.9944, river-lake=0.9943, banking-forest=0.9433
 
 DONE
